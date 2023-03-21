@@ -1,7 +1,7 @@
 import type { ObjectId } from 'mongoose';
 
 interface IUser {
-	_id: ObjectId | string;
+	id: ObjectId | string;
 	username: string;
 	password: string;
 	roles: Roles[];

@@ -59,15 +59,15 @@ const createNewTicket = asyncHandler(
 // @access private
 const updateTicket = asyncHandler(
 	async (req: Request, res: Response): Promise<any> => {
-		const { _id, userId, title, description, completed }: ITicket = req.body;
+		const { id, userId, title, description, completed }: ITicket = req.body;
 
 		// confirm all data received and valid
-		if (!_id || !title || !description || typeof completed !== 'boolean') {
+		if (!id || !title || !description || typeof completed !== 'boolean') {
 			return res.status(400).json({ message: 'All fields are required' });
 		}
 
 		// find ticket in database
-		const ticket = await Ticket.findById(_id).exec();
+		const ticket = await Ticket.findById(id).exec();
 
 		if (!ticket) {
 			return res.status(400).json({ message: 'No ticket found' });

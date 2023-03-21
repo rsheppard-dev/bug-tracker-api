@@ -1,7 +1,7 @@
 import type { ObjectId } from 'mongoose';
 
 interface ITicket {
-	_id: ObjectId | string;
+	id: ObjectId | string;
 	userId: ObjectId | string;
 	title: string;
 	description: string;

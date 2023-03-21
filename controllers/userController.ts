@@ -68,11 +68,11 @@ const createNewUser = asyncHandler(
 // @access private
 const updateUser = asyncHandler(
 	async (req: Request, res: Response): Promise<any> => {
-		const { _id, username, roles, active, password }: IUser = req.body;
+		const { id, username, roles, active, password }: IUser = req.body;
 
 		// confirm user data is valid
 		if (
-			!_id ||
+			!id ||
 			!username ||
 			!Array.isArray(roles) ||
 			!roles.length ||
@@ -82,7 +82,7 @@ const updateUser = asyncHandler(
 		}
 
 		// find user in database
-		const user = await User.findById(_id).exec();
+		const user = await User.findById(id).exec();
 
 		if (!user) {
 			return res.status(400).json({ message: 'User not found' });
@@ -92,7 +92,7 @@ const updateUser = asyncHandler(
 		const dupicate = await User.findOne({ username }).lean().exec();
 
 		// only allow updates for original username owner
-		if (dupicate && dupicate?._id.toString() !== _id) {
+		if (dupicate && dupicate?._id.toString() !== id) {
 			return res.status(409).json({ message: 'Duplicate username' });
 		}
 
@@ -118,21 +118,21 @@ const updateUser = asyncHandler(
 // @access private
 const deleteUser = asyncHandler(
 	async (req: Request, res: Response): Promise<any> => {
-		const { _id } = req.body;
+		const { id } = req.body;
 
-		if (!_id) {
+		if (!id) {
 			return res.status(400).json({ message: 'User ID required' });
 		}
 
 		// get user from database
-		const user = await User.findById(_id).exec();
+		const user = await User.findById(id).exec();
 
 		if (!user) {
 			return res.status(400).json({ message: 'User not found' });
 		}
 
 		// check if user has any open tickets assigned
-		const tickets = await Ticket.findOne({ userId: _id }).lean().exec();
+		const tickets = await Ticket.findOne({ userId: id }).lean().exec();
 
 		if (tickets) {
 			return res.status(400).json({ message: 'User has assigned tickets' });
