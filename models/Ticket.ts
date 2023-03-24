@@ -1,12 +1,21 @@
 import { Schema, model } from 'mongoose';
 
-import ITicket from '../interfaces/ITicket';
+import { ITicket, Category, Priorty } from '../interfaces/ITicket';
 
 const ticketSchema = new Schema<ITicket>(
 	{
+		projectId: {
+			type: Schema.Types.ObjectId,
+			required: true,
+			ref: 'Project',
+		},
 		userId: {
 			type: Schema.Types.ObjectId,
 			required: true,
+			ref: 'User',
+		},
+		developerId: {
+			type: Schema.Types.ObjectId,
 			ref: 'User',
 		},
 		title: {
@@ -16,6 +25,14 @@ const ticketSchema = new Schema<ITicket>(
 		description: {
 			type: String,
 			required: true,
+		},
+		category: {
+			type: String,
+			enum: Category,
+		},
+		priority: {
+			type: String,
+			enum: Priorty,
 		},
 		completed: {
 			type: Boolean,

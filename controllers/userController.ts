@@ -4,7 +4,7 @@ import { hash } from 'bcrypt';
 
 import User from '../models/User';
 import Ticket from '../models/Ticket';
-import IUser from '../interfaces/IUser';
+import type { IUser } from '../interfaces/IUser';
 
 // @desc get all users
 // @route GET /user
@@ -14,7 +14,7 @@ const getAllUsers = asyncHandler(
 		const users = await User.find().select('-password').lean();
 
 		if (!users?.length) {
-			return res.status(400).json({ message: 'No users found' });
+			return res.status(400).json({ message: 'No users found.' });
 		}
 
 		res.json(users);
@@ -28,21 +28,26 @@ const createNewUser = asyncHandler(
 	async (req: Request, res: Response): Promise<any> => {
 		// get data from client
 		const {
-			username,
+			firstName,
+			lastName,
+			email,
 			password,
 			roles,
-		}: Pick<IUser, 'username' | 'password' | 'roles'> = req.body;
+		}: Pick<IUser, 'firstName' | 'lastName' | 'email' | 'password' | 'roles'> =
+			req.body;
 
 		// confirm user data
-		if (!username || !password || !Array.isArray(roles) || !roles.length) {
-			return res.status(400).json({ message: 'All fields are required' });
+		if (!firstName || !lastName || !email || !password) {
+			return res.status(400).json({ message: 'All fields are required.' });
 		}
 
 		// check if user already exists
-		const duplicate = await User.findOne({ username }).lean().exec();
+		const duplicate = await User.findOne({ email }).lean().exec();
 
 		if (duplicate) {
-			return res.status(409).json({ message: 'Duplicate username' });
+			return res
+				.status(409)
+				.json({ message: 'An account with that email is already registered.' });
 		}
 
 		// hash password
@@ -50,15 +55,17 @@ const createNewUser = asyncHandler(
 
 		// create and store new user
 		const user = await User.create({
-			username,
+			firstName,
+			lastName,
+			email,
 			password: hash,
 			roles,
 		});
 
 		if (user) {
-			res.status(201).json({ message: `New user ${username} created` });
+			res.status(201).json({ message: `New account for ${email} created.` });
 		} else {
-			res.status(400).json({ message: 'Invalid user data received' });
+			res.status(400).json({ message: 'Invalid user data received.' });
 		}
 	}
 );
@@ -68,38 +75,42 @@ const createNewUser = asyncHandler(
 // @access private
 const updateUser = asyncHandler(
 	async (req: Request, res: Response): Promise<any> => {
-		const { id, username, roles, active, password }: IUser = req.body;
+		const { id, firstName, lastName, email, roles, password }: IUser = req.body;
 
 		// confirm user data is valid
 		if (
 			!id ||
-			!username ||
+			!firstName ||
+			!lastName ||
+			!email ||
 			!Array.isArray(roles) ||
-			!roles.length ||
-			typeof active !== 'boolean'
+			!roles.length
 		) {
-			return res.status(400).json({ message: 'All fields are required' });
+			return res.status(400).json({ message: 'All fields are required.' });
 		}
 
 		// find user in database
 		const user = await User.findById(id).exec();
 
 		if (!user) {
-			return res.status(400).json({ message: 'User not found' });
+			return res.status(400).json({ message: 'User not found.' });
 		}
 
-		// check or duplicate username
-		const dupicate = await User.findOne({ username }).lean().exec();
+		// check for duplicate email
+		const dupicate = await User.findOne({ email }).lean().exec();
 
-		// only allow updates for original username owner
+		// only allow updates for original email owner
 		if (dupicate && dupicate?._id.toString() !== id) {
-			return res.status(409).json({ message: 'Duplicate username' });
+			return res.status(409).json({
+				message: 'An account is already registered with that email address.',
+			});
 		}
 
 		// update user
-		user.username = username;
+		user.firstName = firstName;
+		user.lastName = lastName;
+		user.email = email;
 		user.roles = roles;
-		user.active = active;
 
 		if (password) {
 			// hash password before updating
@@ -109,7 +120,7 @@ const updateUser = asyncHandler(
 		// save updated user
 		const updatedUser = await user.save();
 
-		res.json({ message: `${updatedUser.username} updated` });
+		res.json({ message: `Account for ${updatedUser.email} updated.` });
 	}
 );
 
@@ -121,28 +132,28 @@ const deleteUser = asyncHandler(
 		const { id } = req.body;
 
 		if (!id) {
-			return res.status(400).json({ message: 'User ID required' });
+			return res.status(400).json({ message: 'User ID required.' });
 		}
 
 		// get user from database
 		const user = await User.findById(id).exec();
 
 		if (!user) {
-			return res.status(400).json({ message: 'User not found' });
+			return res.status(400).json({ message: 'User not found.' });
 		}
 
 		// check if user has any open tickets assigned
 		const tickets = await Ticket.findOne({ userId: id }).lean().exec();
 
 		if (tickets) {
-			return res.status(400).json({ message: 'User has assigned tickets' });
+			return res.status(400).json({ message: 'User has assigned tickets.' });
 		}
 
 		// delete user
 		const deletedUser = await user.deleteOne();
 
 		res.json({
-			message: `Username ${deletedUser.username} with ID ${deletedUser._id} deleted`,
+			message: `Account for ${deletedUser.email} with ID ${deletedUser._id} deleted.`,
 		});
 	}
 );

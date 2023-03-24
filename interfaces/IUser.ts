@@ -1,17 +1,24 @@
 import type { ObjectId } from 'mongoose';
 
-interface IUser {
+export interface IUser {
 	id: ObjectId | string;
-	username: string;
+	firstName: string;
+	lastName: string;
+	email: string;
 	password: string;
-	roles: Roles[];
-	active: boolean;
+	roles: [
+		{
+			teamId: ObjectId | string;
+			role: Role[];
+		}
+	];
+	createdAt: Date;
+	updatedAt: Date;
 }
 
-enum Roles {
-	Basic,
-	Manager,
-	Admin,
+export enum Role {
+	TESTER = 'TESTER',
+	DEVELOPER = 'DEVELOPER',
+	MANAGER = 'MANAGER',
+	ADMIN = 'ADMIN',
 }
-
-export default IUser;

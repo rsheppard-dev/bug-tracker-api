@@ -12,6 +12,8 @@ import errorHandler from './middleware/errorHandler';
 import corsOptions from './config/corsOptions';
 import router from './routes/root';
 import userRouter from './routes/userRoutes';
+import teamRouter from './routes/teamRoutes';
+import projectRouter from './routes/projectRoutes';
 import ticketRouter from './routes/ticketRoutes';
 import connectDB from './config/db';
 
@@ -32,6 +34,8 @@ app.use('/', express.static(path.join(__dirname, 'public')));
 // routes
 app.use('/', router);
 app.use('/user', userRouter);
+app.use('/team', teamRouter);
+app.use('/project', projectRouter);
 app.use('/ticket', ticketRouter);
 
 // deal with 404 errors

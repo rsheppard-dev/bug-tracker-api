@@ -3,7 +3,8 @@ import asyncHandler from 'express-async-handler';
 
 import User from '../models/User';
 import Ticket from '../models/Ticket';
-import ITicket from '../interfaces/ITicket';
+import type { ITicket } from '../interfaces/ITicket';
+import Project from '../models/Project';
 
 // @desc get all tickets
 // @route GET /ticket
@@ -13,7 +14,7 @@ const getAllTickets = asyncHandler(
 		const tickets = await Ticket.find().lean();
 
 		if (!tickets?.length) {
-			return res.status(400).json({ message: 'No tickets found' });
+			return res.status(400).json({ message: 'No tickets found.' });
 		}
 
 		res.json(tickets);
@@ -25,31 +26,50 @@ const getAllTickets = asyncHandler(
 // @access private
 const createNewTicket = asyncHandler(
 	async (req: Request, res: Response): Promise<any> => {
-		const { userId, title, description }: ITicket = req.body;
+		const {
+			userId,
+			projectId,
+			title,
+			description,
+			category,
+			priority,
+		}: ITicket = req.body;
 
 		// confirm valid data received
-		if (!userId || !title || !description) {
-			return res.status(400).json({ message: 'All fields are required' });
+		if (
+			!userId ||
+			!projectId ||
+			!title ||
+			!description ||
+			!category ||
+			!priority
+		) {
+			return res.status(400).json({ message: 'All fields are required.' });
 		}
 
 		// check user id is valid
 		const user = await User.findById(userId).exec();
 
 		if (!user) {
-			return res.status(400).json({ message: 'Invalid user ID received' });
+			return res.status(400).json({ message: 'Invalid user ID received.' });
 		}
 
 		// add ticket to database
 		const ticket = await Ticket.create({
 			userId,
+			projectId,
 			title,
 			description,
+			category,
+			priority,
 		});
 
 		if (ticket) {
-			res.status(201).json({ message: `New ticket ${ticket._id} created` });
+			res
+				.status(201)
+				.json({ message: `New ticket with ID: ${ticket._id} created.` });
 		} else {
-			res.status(400).json({ message: 'Invalid ticket data received' });
+			res.status(400).json({ message: 'Invalid ticket data received.' });
 		}
 	}
 );
@@ -59,11 +79,28 @@ const createNewTicket = asyncHandler(
 // @access private
 const updateTicket = asyncHandler(
 	async (req: Request, res: Response): Promise<any> => {
-		const { id, userId, title, description, completed }: ITicket = req.body;
+		const {
+			id,
+			title,
+			description,
+			category,
+			priority,
+			developerId,
+			projectId,
+			completed,
+		}: ITicket = req.body;
 
 		// confirm all data received and valid
-		if (!id || !title || !description || typeof completed !== 'boolean') {
-			return res.status(400).json({ message: 'All fields are required' });
+		if (
+			!id ||
+			!projectId ||
+			!title ||
+			!description ||
+			!category ||
+			!priority ||
+			typeof completed !== 'boolean'
+		) {
+			return res.status(400).json({ message: 'All fields are required.' });
 		}
 
 		// find ticket in database
@@ -77,22 +114,24 @@ const updateTicket = asyncHandler(
 		ticket.title = title;
 		ticket.description = description;
 		ticket.completed = completed;
+		ticket.category = category;
+		ticket.priority = priority;
 
-		if (userId) {
-			const user = await User.findById(userId).exec();
+		if (developerId) {
+			const developer = await User.findById(developerId).exec();
 
-			if (!user) {
-				return res
-					.status(400)
-					.json({ message: 'Unable to assign to invalid user' });
+			if (!developer) {
+				return res.status(400).json({
+					message: 'Unable to assign to invalid user as a developer.',
+				});
 			}
 
-			ticket.userId = userId;
+			ticket.developerId = developerId;
 		}
 
 		const updatedTicket = await ticket.save();
 
-		res.json({ message: `Ticket ${updatedTicket._id} updated` });
+		res.json({ message: `Ticket ID: ${updatedTicket._id} updated.` });
 	}
 );
 
@@ -101,24 +140,24 @@ const updateTicket = asyncHandler(
 // @access private
 const deleteTicket = asyncHandler(
 	async (req: Request, res: Response): Promise<any> => {
-		const { _id } = req.body;
+		const { id } = req.body;
 
 		// check data received
-		if (!_id) {
-			return res.status(400).json({ message: 'Ticket ID required' });
+		if (!id) {
+			return res.status(400).json({ message: 'Ticket ID required.' });
 		}
 
 		// check ticket exists
-		const ticket = await Ticket.findById(_id).exec();
+		const ticket = await Ticket.findById(id).exec();
 
 		if (!ticket) {
-			return res.status(400).json({ message: 'Ticket not found' });
+			return res.status(400).json({ message: 'Ticket not found.' });
 		}
 
 		const deletedTicket = await ticket.deleteOne();
 
 		res.json({
-			message: `Ticket ${deletedTicket._id} deleted`,
+			message: `Ticket ID: ${deletedTicket._id} deleted.`,
 		});
 	}
 );

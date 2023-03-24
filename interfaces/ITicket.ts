@@ -1,13 +1,28 @@
 import type { ObjectId } from 'mongoose';
 
-interface ITicket {
+export interface ITicket {
 	id: ObjectId | string;
+	projectId: ObjectId | string;
 	userId: ObjectId | string;
+	developerId: ObjectId | string;
 	title: string;
 	description: string;
+	category: Category;
+	priority: Priorty;
 	completed: boolean;
 	createdAt: Date;
 	updatedAt: Date;
 }
 
-export default ITicket;
+export enum Category {
+	DESIGN = 'DESIGN',
+	FEATURE = 'FEATURE',
+	BUG = 'BUG',
+	SECURITY = 'SECURITY',
+}
+
+export enum Priorty {
+	LOW = 'LOW',
+	MODERATE = 'MODERATE',
+	HIGH = 'HIGH',
+}
