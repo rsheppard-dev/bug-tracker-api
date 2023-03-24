@@ -1,6 +1,5 @@
 import type { Request, Response } from 'express';
 import asyncHandler from 'express-async-handler';
-import { hash } from 'bcrypt';
 
 import User from '../models/User';
 import Ticket from '../models/Ticket';
@@ -11,7 +10,7 @@ import type { IUser } from '../interfaces/IUser';
 // @access private
 const getAllUsers = asyncHandler(
 	async (req: Request, res: Response): Promise<any> => {
-		const users = await User.find().select('-password').lean();
+		const users = await User.find().lean();
 
 		if (!users?.length) {
 			return res.status(400).json({ message: 'No users found.' });
@@ -32,7 +31,6 @@ const createNewUser = asyncHandler(
 			lastName,
 			email,
 			password,
-			roles,
 		}: Pick<IUser, 'firstName' | 'lastName' | 'email' | 'password' | 'roles'> =
 			req.body;
 
@@ -50,20 +48,15 @@ const createNewUser = asyncHandler(
 				.json({ message: 'An account with that email is already registered.' });
 		}
 
-		// hash password
-		const hashed = await hash(password, 12);
-
 		// create and store new user
 		const user = await User.create({
-			firstName,
-			lastName,
-			email,
-			password: hash,
-			roles,
+			...req.body,
 		});
 
 		if (user) {
-			res.status(201).json({ message: `New account for ${email} created.` });
+			res
+				.status(201)
+				.json({ message: `New account for ${user.email} created.` });
 		} else {
 			res.status(400).json({ message: 'Invalid user data received.' });
 		}
@@ -75,18 +68,22 @@ const createNewUser = asyncHandler(
 // @access private
 const updateUser = asyncHandler(
 	async (req: Request, res: Response): Promise<any> => {
-		const { id, firstName, lastName, email, roles, password }: IUser = req.body;
+		const { id, email }: IUser = req.body;
 
-		// confirm user data is valid
-		if (
-			!id ||
-			!firstName ||
-			!lastName ||
-			!email ||
-			!Array.isArray(roles) ||
-			!roles.length
-		) {
-			return res.status(400).json({ message: 'All fields are required.' });
+		const updates = Object.keys(req.body);
+		const allowedUpdates = [
+			'firstName',
+			'lastName',
+			'email',
+			'password',
+			'roles',
+		];
+		const isValidOperation = updates.every(update =>
+			allowedUpdates.includes(update)
+		);
+
+		if (!isValidOperation) {
+			return res.status(400).json({ error: 'Invalid updates.' });
 		}
 
 		// find user in database
@@ -107,15 +104,9 @@ const updateUser = asyncHandler(
 		}
 
 		// update user
-		user.firstName = firstName;
-		user.lastName = lastName;
-		user.email = email;
-		user.roles = roles;
-
-		if (password) {
-			// hash password before updating
-			user.password = await hash(password, 12);
-		}
+		updates.forEach(
+			update => (user[update as keyof IUser] = req.body[update as keyof IUser])
+		);
 
 		// save updated user
 		const updatedUser = await user.save();

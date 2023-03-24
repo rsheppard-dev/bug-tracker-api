@@ -26,7 +26,7 @@ const getAllProjects = asyncHandler(
 // @access private
 const createNewProject = asyncHandler(
 	async (req: Request, res: Response): Promise<any> => {
-		const { userId, name, description, teamId }: IProject = req.body;
+		const { userId, name, teamId }: IProject = req.body;
 
 		// confirm valid data received
 		if (!userId || !name || !teamId) {
@@ -58,10 +58,7 @@ const createNewProject = asyncHandler(
 
 		// add project to database
 		const project = await Project.create({
-			userId,
-			name,
-			description,
-			teamId,
+			...req.body,
 		});
 
 		if (project) {
