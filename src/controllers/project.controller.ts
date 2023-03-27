@@ -1,17 +1,15 @@
 import type { Request, Response } from 'express';
 import asyncHandler from 'express-async-handler';
 
-import Project from '../models/Project';
-import User from '../models/User';
-import type { IProject } from '../interfaces/IProject';
-import Team from '../models/Team';
+import { ProjectModel, TeamModel } from '../models';
+import { UserModel } from '../models';
 
 // @desc get all projects
 // @route GET /project
 // @access private
 const getAllProjects = asyncHandler(
 	async (req: Request, res: Response): Promise<any> => {
-		const projects = await Project.find().lean();
+		const projects = await ProjectModel.find().lean();
 
 		if (!projects?.length) {
 			return res.status(400).json({ message: 'No projects found.' });
@@ -26,7 +24,7 @@ const getAllProjects = asyncHandler(
 // @access private
 const createNewProject = asyncHandler(
 	async (req: Request, res: Response): Promise<any> => {
-		const { userId, name, teamId }: IProject = req.body;
+		const { userId, name, teamId } = req.body;
 
 		// confirm valid data received
 		if (!userId || !name || !teamId) {
@@ -34,30 +32,30 @@ const createNewProject = asyncHandler(
 		}
 
 		// check user id is valid
-		const user = await User.findById(userId).exec();
+		const user = await UserModel.findById(userId).exec();
 
 		if (!user) {
 			return res.status(400).json({ message: 'Invalid user ID received.' });
 		}
 
 		// check team id is valid
-		const team = await Team.findById(teamId).exec();
+		const team = await TeamModel.findById(teamId).exec();
 
 		if (!team) {
 			return res.status(400).json({ message: 'Invalid team ID received.' });
 		}
 
 		// check project name doesn't already exist on team
-		const duplicate = await Project.findOne({ name }).lean().exec();
+		const duplicate = await ProjectModel.findOne({ name }).lean().exec();
 
-		if (duplicate && duplicate.teamId.toString() === teamId) {
+		if (duplicate && duplicate.team.toString() === teamId) {
 			return res
 				.status(400)
 				.json({ message: 'A project with that name already exists.' });
 		}
 
 		// add project to database
-		const project = await Project.create({
+		const project = await ProjectModel.create({
 			...req.body,
 		});
 
@@ -74,15 +72,8 @@ const createNewProject = asyncHandler(
 // @access private
 const updateProject = asyncHandler(
 	async (req: Request, res: Response): Promise<any> => {
-		const {
-			id,
-			name,
-			description,
-			image,
-			testers,
-			developers,
-			archived,
-		}: IProject = req.body;
+		const { id, name, description, image, testers, developers, archived } =
+			req.body;
 
 		// confirm all data received and valid
 		if (!id || !name) {
@@ -90,7 +81,7 @@ const updateProject = asyncHandler(
 		}
 
 		// find project in database
-		const project = await Project.findById(id).exec();
+		const project = await ProjectModel.findById(id).exec();
 
 		if (!project) {
 			return res.status(400).json({ message: 'No project found.' });
@@ -127,7 +118,7 @@ const deleteProject = asyncHandler(
 		}
 
 		// check team exists
-		const project = await Project.findById(id).exec();
+		const project = await ProjectModel.findById(id).exec();
 
 		if (!project) {
 			return res.status(400).json({ message: 'Project not found.' });

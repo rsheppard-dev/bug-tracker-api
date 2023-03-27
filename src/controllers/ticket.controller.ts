@@ -1,17 +1,15 @@
 import type { Request, Response } from 'express';
 import asyncHandler from 'express-async-handler';
 
-import User from '../models/User';
-import Ticket from '../models/Ticket';
-import type { ITicket } from '../interfaces/ITicket';
-import Project from '../models/Project';
+import { UserModel } from '../models';
+import { TicketModel } from '../models';
 
 // @desc get all tickets
 // @route GET /ticket
 // @access private
 const getAllTickets = asyncHandler(
 	async (req: Request, res: Response): Promise<any> => {
-		const tickets = await Ticket.find().lean();
+		const tickets = await TicketModel.find().lean();
 
 		if (!tickets?.length) {
 			return res.status(400).json({ message: 'No tickets found.' });
@@ -26,14 +24,8 @@ const getAllTickets = asyncHandler(
 // @access private
 const createNewTicket = asyncHandler(
 	async (req: Request, res: Response): Promise<any> => {
-		const {
-			userId,
-			projectId,
-			title,
-			description,
-			category,
-			priority,
-		}: ITicket = req.body;
+		const { userId, projectId, title, description, category, priority } =
+			req.body;
 
 		// confirm valid data received
 		if (
@@ -48,14 +40,14 @@ const createNewTicket = asyncHandler(
 		}
 
 		// check user id is valid
-		const user = await User.findById(userId).exec();
+		const user = await UserModel.findById(userId).exec();
 
 		if (!user) {
 			return res.status(400).json({ message: 'Invalid user ID received.' });
 		}
 
 		// add ticket to database
-		const ticket = await Ticket.create({
+		const ticket = await TicketModel.create({
 			userId,
 			projectId,
 			title,
@@ -88,23 +80,10 @@ const updateTicket = asyncHandler(
 			developerId,
 			projectId,
 			completed,
-		}: ITicket = req.body;
-
-		// confirm all data received and valid
-		if (
-			!id ||
-			!projectId ||
-			!title ||
-			!description ||
-			!category ||
-			!priority ||
-			typeof completed !== 'boolean'
-		) {
-			return res.status(400).json({ message: 'All fields are required.' });
-		}
+		} = req.body;
 
 		// find ticket in database
-		const ticket = await Ticket.findById(id).exec();
+		const ticket = await TicketModel.findById(id).exec();
 
 		if (!ticket) {
 			return res.status(400).json({ message: 'No ticket found' });
@@ -118,7 +97,7 @@ const updateTicket = asyncHandler(
 		ticket.priority = priority;
 
 		if (developerId) {
-			const developer = await User.findById(developerId).exec();
+			const developer = await UserModel.findById(developerId).exec();
 
 			if (!developer) {
 				return res.status(400).json({
@@ -126,7 +105,7 @@ const updateTicket = asyncHandler(
 				});
 			}
 
-			ticket.developerId = developerId;
+			ticket.developer = developerId;
 		}
 
 		const updatedTicket = await ticket.save();
@@ -148,7 +127,7 @@ const deleteTicket = asyncHandler(
 		}
 
 		// check ticket exists
-		const ticket = await Ticket.findById(id).exec();
+		const ticket = await TicketModel.findById(id).exec();
 
 		if (!ticket) {
 			return res.status(400).json({ message: 'Ticket not found.' });

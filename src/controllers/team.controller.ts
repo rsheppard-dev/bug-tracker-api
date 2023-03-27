@@ -1,16 +1,15 @@
 import type { Request, Response } from 'express';
 import asyncHandler from 'express-async-handler';
 
-import Team from '../models/Team';
-import User from '../models/User';
-import type { ITeam } from '../interfaces/ITeam';
+import { TeamModel } from '../models';
+import { UserModel } from '../models';
 
 // @desc get all teams
 // @route GET /team
 // @access private
 const getAllTeams = asyncHandler(
 	async (req: Request, res: Response): Promise<any> => {
-		const teams = await Team.find().lean();
+		const teams = await TeamModel.find().lean();
 
 		if (!teams?.length) {
 			return res.status(400).json({ message: 'No teams found.' });
@@ -25,7 +24,7 @@ const getAllTeams = asyncHandler(
 // @access private
 const createNewTeam = asyncHandler(
 	async (req: Request, res: Response): Promise<any> => {
-		const { userId, name, description }: ITeam = req.body;
+		const { userId, name, description } = req.body;
 
 		// confirm valid data received
 		if (!userId || !name) {
@@ -33,14 +32,14 @@ const createNewTeam = asyncHandler(
 		}
 
 		// check user id is valid
-		const user = await User.findById(userId).exec();
+		const user = await UserModel.findById(userId).exec();
 
 		if (!user) {
 			return res.status(400).json({ message: 'Invalid user ID received.' });
 		}
 
 		// check team name doesn't already exist
-		const duplicate = await Team.findOne({ name }).lean().exec();
+		const duplicate = await TeamModel.findOne({ name }).lean().exec();
 
 		if (duplicate) {
 			return res
@@ -49,7 +48,7 @@ const createNewTeam = asyncHandler(
 		}
 
 		// add team to database
-		const team = await Team.create({
+		const team = await TeamModel.create({
 			userId,
 			name,
 			description,
@@ -68,7 +67,7 @@ const createNewTeam = asyncHandler(
 // @access private
 const updateTeam = asyncHandler(
 	async (req: Request, res: Response): Promise<any> => {
-		const { id, name, description, logo, userId }: ITeam = req.body;
+		const { id, name, description, logo, userId } = req.body;
 
 		// confirm all data received and valid
 		if (!id || !name || !description) {
@@ -76,7 +75,7 @@ const updateTeam = asyncHandler(
 		}
 
 		// find team in database
-		const team = await Team.findById(id).exec();
+		const team = await TeamModel.findById(id).exec();
 
 		if (!team) {
 			return res.status(400).json({ message: 'No team found.' });
@@ -91,7 +90,7 @@ const updateTeam = asyncHandler(
 		}
 
 		if (userId) {
-			const user = await User.findById(userId).exec();
+			const user = await UserModel.findById(userId).exec();
 
 			if (!user) {
 				return res.status(400).json({
@@ -99,7 +98,7 @@ const updateTeam = asyncHandler(
 				});
 			}
 
-			team.userId = userId;
+			team.owner = userId;
 		}
 
 		const updatedTeam = await team.save();
@@ -121,7 +120,7 @@ const deleteTeam = asyncHandler(
 		}
 
 		// check team exists
-		const team = await Team.findById(id).exec();
+		const team = await TeamModel.findById(id).exec();
 
 		if (!team) {
 			return res.status(400).json({ message: 'Team not found.' });

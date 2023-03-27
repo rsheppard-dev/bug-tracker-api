@@ -3,24 +3,25 @@ import path from 'path';
 import * as dotenv from 'dotenv';
 dotenv.config();
 import express from 'express';
+import config from 'config';
 import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import mongoose from 'mongoose';
 
 import { logger, logEvents } from './middleware/logger';
 import errorHandler from './middleware/errorHandler';
-import corsOptions from './config/corsOptions';
-import router from './routes/root';
-import authRouter from './routes/authRoutes';
-import userRouter from './routes/userRoutes';
-import teamRouter from './routes/teamRoutes';
-import projectRouter from './routes/projectRoutes';
-import ticketRouter from './routes/ticketRoutes';
-import connectDB from './config/db';
+import corsOptions from '../config/corsOptions';
+import router from './routes/index';
+import authRouter from './routes/auth.routes';
+import userRouter from './routes/user.routes';
+import teamRouter from './routes/team.routes';
+import projectRouter from './routes/project.routes';
+import ticketRouter from './routes/ticket.routes';
+import connectDB from '../config/db';
 
 const app = express();
 
-const PORT = process.env.PORT || 3500;
+const PORT = config.get('port');
 
 // connect to database
 connectDB();
@@ -34,11 +35,11 @@ app.use('/', express.static(path.join(__dirname, 'public')));
 
 // routes
 app.use('/', router);
-app.use('/auth', authRouter);
+// app.use('/auth', authRouter);
 app.use('/user', userRouter);
-app.use('/team', teamRouter);
-app.use('/project', projectRouter);
-app.use('/ticket', ticketRouter);
+// app.use('/team', teamRouter);
+// app.use('/project', projectRouter);
+// app.use('/ticket', ticketRouter);
 
 // deal with 404 errors
 app.all('*', (req, res) => {

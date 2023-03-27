@@ -1,16 +1,17 @@
 import type { Request, Response } from 'express';
 import asyncHandler from 'express-async-handler';
 
-import User from '../models/User';
-import Ticket from '../models/Ticket';
-import type { IUser } from '../interfaces/IUser';
+import { UserModel } from '../models';
+import { TicketModel } from '../models';
+import type { CreateUserInput } from '../schemas/user.schema';
+import { createUser } from '../services/user.services';
 
 // @desc get all users
 // @route GET /user
 // @access private
 const getAllUsers = asyncHandler(
 	async (req: Request, res: Response): Promise<any> => {
-		const users = await User.find().lean();
+		const users = await UserModel.find().lean();
 
 		if (!users?.length) {
 			return res.status(400).json({ message: 'No users found.' });
@@ -23,52 +24,33 @@ const getAllUsers = asyncHandler(
 // @desc create new user
 // @route POST /user
 // @access private
-const createNewUser = asyncHandler(
-	async (req: Request, res: Response): Promise<any> => {
-		// get data from client
-		const {
-			firstName,
-			lastName,
-			email,
-			password,
-		}: Pick<IUser, 'firstName' | 'lastName' | 'email' | 'password' | 'roles'> =
-			req.body;
+const createUserHandler = async (
+	req: Request<{}, {}, CreateUserInput>,
+	res: Response
+): Promise<any> => {
+	try {
+		const user = await createUser(req.body);
 
-		// confirm user data
-		if (!firstName || !lastName || !email || !password) {
-			return res.status(400).json({ message: 'All fields are required.' });
-		}
-
-		// check if user already exists
-		const duplicate = await User.findOne({ email }).lean().exec();
-
-		if (duplicate) {
+		return res.json({ message: 'New user successfully created.' });
+	} catch (error: any) {
+		if (error.code === 11000) {
 			return res
 				.status(409)
-				.json({ message: 'An account with that email is already registered.' });
+				.json({ message: 'Account already exists with that email address.' });
 		}
 
-		// create and store new user
-		const user = await User.create({
-			...req.body,
-		});
-
-		if (user) {
-			res
-				.status(201)
-				.json({ message: `New account for ${user.email} created.` });
-		} else {
-			res.status(400).json({ message: 'Invalid user data received.' });
-		}
+		return res
+			.status(500)
+			.json({ error: error.errors, message: 'Failed to create new user.' });
 	}
-);
+};
 
 // @desc update user
 // @route PATCH /user
 // @access private
 const updateUser = asyncHandler(
 	async (req: Request, res: Response): Promise<any> => {
-		const { id, email }: IUser = req.body;
+		const { id, email } = req.body;
 
 		const updates = Object.keys(req.body);
 		const allowedUpdates = [
@@ -87,14 +69,14 @@ const updateUser = asyncHandler(
 		}
 
 		// find user in database
-		const user = await User.findById(id).exec();
+		const user = await UserModel.findById(id).exec();
 
 		if (!user) {
 			return res.status(400).json({ message: 'User not found.' });
 		}
 
 		// check for duplicate email
-		const dupicate = await User.findOne({ email }).lean().exec();
+		const dupicate = await UserModel.findOne({ email }).lean().exec();
 
 		// only allow updates for original email owner
 		if (dupicate && dupicate?._id.toString() !== id) {
@@ -104,9 +86,7 @@ const updateUser = asyncHandler(
 		}
 
 		// update user
-		updates.forEach(
-			update => (user[update as keyof IUser] = req.body[update as keyof IUser])
-		);
+		// updates.forEach(update => (user[update as keyof User] = req.body[update]));
 
 		// save updated user
 		const updatedUser = await user.save();
@@ -127,14 +107,14 @@ const deleteUser = asyncHandler(
 		}
 
 		// get user from database
-		const user = await User.findById(id).exec();
+		const user = await UserModel.findById(id).exec();
 
 		if (!user) {
 			return res.status(400).json({ message: 'User not found.' });
 		}
 
 		// check if user has any open tickets assigned
-		const tickets = await Ticket.findOne({ userId: id }).lean().exec();
+		const tickets = await TicketModel.findOne({ userId: id }).lean().exec();
 
 		if (tickets) {
 			return res.status(400).json({ message: 'User has assigned tickets.' });
@@ -149,4 +129,4 @@ const deleteUser = asyncHandler(
 	}
 );
 
-export default { getAllUsers, createNewUser, updateUser, deleteUser };
+export default { getAllUsers, createUserHandler, updateUser, deleteUser };
