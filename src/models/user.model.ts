@@ -1,4 +1,3 @@
-import { sign } from 'jsonwebtoken';
 import {
 	modelOptions,
 	prop,
@@ -6,12 +5,20 @@ import {
 	pre,
 	DocumentType,
 	Ref,
+	index,
 } from '@typegoose/typegoose';
-import { v4 as uuid } from 'uuid';
+import { nanoid } from 'nanoid';
 import { hash, verify } from 'argon2';
 
 import { Team } from './team.model';
 
+export const privateFields = [
+	'password',
+	'__v',
+	'verificationCode',
+	'verified',
+	'passwordResetCode',
+];
 @modelOptions({
 	schemaOptions: {
 		timestamps: true,
@@ -31,6 +38,7 @@ import { Team } from './team.model';
 
 	next();
 })
+@index({ email: 1 })
 export class User {
 	@prop({ lowercase: true, required: true, unique: true, trim: true })
 	email: string;
@@ -41,13 +49,13 @@ export class User {
 	@prop({ required: true, trim: true })
 	lastName: string;
 
-	@prop({ default: () => uuid() })
+	@prop({ required: true, trim: true })
 	password: string;
 
 	@prop()
 	passwordResetCode: string | null;
 
-	@prop({ required: true, trim: true })
+	@prop({ default: () => nanoid() })
 	verificationCode: string;
 
 	@prop({ default: false })
@@ -70,30 +78,6 @@ export class User {
 			return false;
 		}
 	}
-
-	generateAccessToken = function (this: DocumentType<User>) {
-		const user = this;
-
-		const payload = {
-			id: user._id.toString(),
-			email: user.email,
-			roles: user.roles,
-		};
-		const secret = process.env.ACCESS_TOKEN_SECRET!;
-
-		const token = sign(payload, secret, { expiresIn: '1m' });
-		return token;
-	};
-
-	generateRefreshToken = function (this: DocumentType<User>) {
-		const user = this;
-
-		const payload = { id: user._id.toString() };
-		const secret = process.env.REFRESH_TOKEN_SECRET!;
-
-		const token = sign(payload, secret, { expiresIn: '1d' });
-		return token;
-	};
 }
 
 enum Role {

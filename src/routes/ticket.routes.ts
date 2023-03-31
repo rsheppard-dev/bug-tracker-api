@@ -1,6 +1,6 @@
 import express from 'express';
 
-import ticketController from '../controllers/ticketController';
+import ticketController from '../controllers/ticket.controller';
 import auth from '../middleware/auth';
 
 const router = express.Router();

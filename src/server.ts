@@ -10,21 +10,22 @@ import mongoose from 'mongoose';
 
 import { logger, logEvents } from './middleware/logger';
 import errorHandler from './middleware/errorHandler';
-import corsOptions from '../config/corsOptions';
+import corsOptions from '../corsOptions';
 import router from './routes/index';
 import authRouter from './routes/auth.routes';
 import userRouter from './routes/user.routes';
 import teamRouter from './routes/team.routes';
 import projectRouter from './routes/project.routes';
 import ticketRouter from './routes/ticket.routes';
-import connectDB from '../config/db';
+import dbConnect from './utils/dbConnect';
+import deserializeUser from './middleware/deserializeUser';
 
 const app = express();
 
-const PORT = config.get('port');
+const PORT = config.get<number>('port');
 
 // connect to database
-connectDB();
+dbConnect();
 
 // middleware
 app.use(logger);
@@ -32,14 +33,15 @@ app.use(cors(corsOptions));
 app.use(express.json());
 app.use(cookieParser());
 app.use('/', express.static(path.join(__dirname, 'public')));
+app.use(deserializeUser);
 
 // routes
 app.use('/', router);
-// app.use('/auth', authRouter);
+app.use('/auth', authRouter);
 app.use('/user', userRouter);
-// app.use('/team', teamRouter);
-// app.use('/project', projectRouter);
-// app.use('/ticket', ticketRouter);
+app.use('/team', teamRouter);
+app.use('/project', projectRouter);
+app.use('/ticket', ticketRouter);
 
 // deal with 404 errors
 app.all('*', (req, res) => {

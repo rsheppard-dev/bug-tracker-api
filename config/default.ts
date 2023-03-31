@@ -1,3 +1,8 @@
 export default {
-	port: 3500,
+	port: '',
+	dbUri: '',
+	accessTokenPrivateKey: '',
+	accessTokenPublicKey: '',
+	refreshTokenPrivateKey: '',
+	refreshTokenPublicKey: '',
 };

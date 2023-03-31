@@ -17,6 +17,6 @@ export class Team {
 	@prop()
 	logo: Buffer;
 
-	@prop({ required: true, ref: () => 'User' })
+	@prop({ required: true, ref: () => User })
 	owner: Ref<User>;
 }
