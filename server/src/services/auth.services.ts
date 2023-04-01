@@ -18,7 +18,7 @@ export function generateAccessToken(user: DocumentType<User>) {
 	const payload = omit(user.toJSON(), privateFields);
 
 	const accessToken = signJwt(payload, 'accessTokenPrivateKey', {
-		expiresIn: '15m',
+		expiresIn: '10s',
 	});
 
 	return accessToken;
@@ -27,10 +27,9 @@ export function generateAccessToken(user: DocumentType<User>) {
 export async function generateRefreshToken({ userId }: { userId: string }) {
 	const session = await createSession({ userId });
 	const payload = { session: session._id.toString() };
-	console.log(payload);
 
 	const refreshToken = signJwt(payload, 'refreshTokenPrivateKey', {
-		expiresIn: '1y',
+		expiresIn: '20s',
 	});
 
 	return refreshToken;

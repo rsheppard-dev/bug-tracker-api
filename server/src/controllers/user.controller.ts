@@ -202,7 +202,9 @@ const updateUser = asyncHandler(
 		}
 
 		// update user
-		// updates.forEach(update => (user[update as keyof User] = req.body[update]));
+		updates.forEach(update => {
+			// user[update as keyof User] = req.body[update]
+		});
 
 		// save updated user
 		const updatedUser = await user.save();
