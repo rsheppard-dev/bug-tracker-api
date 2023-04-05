@@ -1,12 +1,13 @@
 import express from 'express';
 
 import userController from '../controllers/user.controller';
-import auth from '../middleware/auth';
+import authUser from '../middleware/authUser';
 import validateResource from '../middleware/validateResource';
 import {
 	createUserSchema,
 	forgottenPasswordSchema,
 	resetPasswordSchema,
+	updateUserSchema,
 	verifyUserSchema,
 } from '../schemas/user.schema';
 
@@ -14,10 +15,14 @@ const router = express.Router();
 
 router
 	.route('/')
-	.get(auth, userController.getAllUsers)
+	.get(authUser, userController.getAllUsers)
 	.post(validateResource(createUserSchema), userController.createUserHandler)
-	.patch(auth, userController.updateUser)
-	.delete(auth, userController.deleteUser);
+	.patch(
+		authUser,
+		validateResource(updateUserSchema),
+		userController.updateUserHandler
+	)
+	.delete(authUser, userController.deleteUser);
 
 router.get(
 	'/verify/:id/:verificationCode',
@@ -37,6 +42,6 @@ router.post(
 	userController.resetPasswordHandler
 );
 
-router.route('/me').get(auth, userController.getCurrentUserHandler);
+router.route('/me').get(authUser, userController.getCurrentUserHandler);
 
 export default router;

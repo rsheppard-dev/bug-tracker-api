@@ -3,32 +3,37 @@ import path from 'path';
 import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import express from 'express';
+import config from 'config';
 
-import corsOptions from '../../corsOptions';
-import deserializeUser from '../middleware/deserializeUser';
 import errorHandler from '../middleware/errorHandler';
 import { logger } from '../middleware/logger';
 import router from '../routes';
-import authRouter from '../routes/auth.routes';
+import sessionRouter from '../routes/session.routes';
 import userRouter from '../routes/user.routes';
 import teamRouter from '../routes/team.routes';
 import projectRouter from '../routes/project.routes';
 import ticketRouter from '../routes/ticket.routes';
+import getUser from '../middleware/getUser';
 
 function createServer() {
 	const app = express();
 
 	// middleware
 	app.use(logger);
-	app.use(cors(corsOptions));
+	app.use(
+		cors({
+			origin: config.get<string>('origin'),
+			credentials: true,
+		})
+	);
 	app.use(express.json());
 	app.use(cookieParser());
 	app.use('/', express.static(path.join(__dirname, 'public')));
-	app.use(deserializeUser);
+	app.use(getUser);
 
 	// routes
 	app.use('/', router);
-	app.use('/auth', authRouter);
+	app.use('/session', sessionRouter);
 	app.use('/user', userRouter);
 	app.use('/team', teamRouter);
 	app.use('/project', projectRouter);

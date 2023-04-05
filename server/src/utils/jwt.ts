@@ -21,7 +21,7 @@ export function signJwt(
 export function verifyJwt<T>(
 	token: string,
 	publicKey: 'accessTokenPublicKey' | 'refreshTokenPublicKey'
-): T | null {
+): { valid: boolean; expired: boolean; decoded: T | null } {
 	// decode key from base64 encryption
 	const key = Buffer.from(config.get<string>(publicKey), 'base64').toString(
 		'ascii'
@@ -30,9 +30,17 @@ export function verifyJwt<T>(
 	// use token and public key to decode jwt then return payload or null
 	try {
 		const decoded = verify(token, key, { algorithms: ['RS256'] }) as T;
-		return decoded;
-	} catch (error) {
-		console.log(error);
-		return null;
+		return {
+			valid: true,
+			expired: false,
+			decoded,
+		};
+	} catch (e: any) {
+		console.log(e);
+		return {
+			valid: false,
+			expired: e.message === 'jwt expired',
+			decoded: null,
+		};
 	}
 }

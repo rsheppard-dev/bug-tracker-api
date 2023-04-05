@@ -11,4 +11,13 @@ export const createSessionSchema = object({
 	}),
 });
 
+export const refreshTokenSchema = object({
+	body: object({
+		refreshToken: string({
+			required_error: 'Refresh token is required.',
+		}),
+	}),
+});
+
 export type CreateSessionInput = TypeOf<typeof createSessionSchema>['body'];
+export type RefreshTokenInput = TypeOf<typeof refreshTokenSchema>['body'];

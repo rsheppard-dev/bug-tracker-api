@@ -1,6 +1,7 @@
 import type { Request, Response } from 'express';
 import asyncHandler from 'express-async-handler';
 import { nanoid } from 'nanoid';
+import { get, updateWith } from 'lodash';
 
 import { UserModel } from '../models';
 import { TicketModel } from '../models';
@@ -8,6 +9,7 @@ import type {
 	CreateUserInput,
 	ForgottenPasswordInput,
 	ResetPasswordInput,
+	UpdateUserInput,
 	VerifyUserInput,
 } from '../schemas/user.schema';
 import {
@@ -16,6 +18,7 @@ import {
 	findUserById,
 } from '../services/user.services';
 import sendMail from '../utils/mail';
+import { sendVerificationEmail } from '../services/email.services';
 
 // @desc get all users
 // @route GET /user
@@ -39,17 +42,9 @@ const createUserHandler = asyncHandler(
 	async (req: Request<{}, {}, CreateUserInput>, res: Response) => {
 		const user = await createUser(req.body);
 
-		const text = `Hi ${user.firstName},\n\nThank you for signing up to Bugscape!\nBefore you get started please verify your account.\n\nUser ID: ${user._id}
-Verification code: ${user.verificationCode}`;
+		sendVerificationEmail(user);
 
-		sendMail({
-			from: 'noreply@bugscape.net',
-			to: user.email,
-			subject: 'Please verify your account',
-			text,
-		});
-
-		res.json({ message: 'New user successfully created.' });
+		res.json(user);
 	}
 );
 
@@ -164,9 +159,12 @@ const getCurrentUserHandler = asyncHandler(
 // @desc update user
 // @route PATCH /user
 // @access private
-const updateUser = asyncHandler(
-	async (req: Request, res: Response): Promise<any> => {
-		const { id, email } = req.body;
+const updateUserHandler = asyncHandler(
+	async (
+		req: Request<{}, {}, UpdateUserInput>,
+		res: Response
+	): Promise<any> => {
+		const { _id } = res.locals.user;
 
 		const updates = Object.keys(req.body);
 		const allowedUpdates = [
@@ -185,25 +183,27 @@ const updateUser = asyncHandler(
 		}
 
 		// find user in database
-		const user = await UserModel.findById(id).exec();
+		const user = await findUserById(_id);
 
 		if (!user) {
 			return res.status(400).json({ message: 'User not found.' });
 		}
 
-		// check for duplicate email
-		const dupicate = await UserModel.findOne({ email }).lean().exec();
+		if (get(updates, 'email')) {
+			// check for duplicate email
+			const dupicate = await findUserByEmail(String(get(updates, 'email')));
 
-		// only allow updates for original email owner
-		if (dupicate && dupicate?._id.toString() !== id) {
-			return res.status(409).json({
-				message: 'An account is already registered with that email address.',
-			});
+			// only allow updates for original email owner
+			if (dupicate && dupicate?._id.toString() !== _id) {
+				return res.status(409).json({
+					message: 'An account is already registered with that email address.',
+				});
+			}
 		}
 
 		// update user
 		updates.forEach(update => {
-			// user[update as keyof User] = req.body[update]
+			updateWith(user, update, () => get(req.body, update));
 		});
 
 		// save updated user
@@ -218,18 +218,9 @@ const updateUser = asyncHandler(
 // @access private
 const deleteUser = asyncHandler(
 	async (req: Request, res: Response): Promise<any> => {
-		const { id } = req.body;
+		const { id } = res.locals.user;
 
-		if (!id) {
-			return res.status(400).json({ message: 'User ID required.' });
-		}
-
-		// get user from database
-		const user = await UserModel.findById(id).exec();
-
-		if (!user) {
-			return res.status(400).json({ message: 'User not found.' });
-		}
+		const user = id && (await findUserById(id));
 
 		// check if user has any open tickets assigned
 		const tickets = await TicketModel.findOne({ userId: id }).lean().exec();
@@ -242,7 +233,7 @@ const deleteUser = asyncHandler(
 		const deletedUser = await user.deleteOne();
 
 		res.json({
-			message: `Account for ${deletedUser.email} with ID ${deletedUser._id} deleted.`,
+			message: `Account for ${deletedUser.email} with ID ${deletedUser.id} deleted.`,
 		});
 	}
 );
@@ -254,6 +245,6 @@ export default {
 	resetPasswordHandler,
 	getCurrentUserHandler,
 	getAllUsers,
-	updateUser,
+	updateUserHandler,
 	deleteUser,
 };

@@ -11,17 +11,19 @@ import { nanoid } from 'nanoid';
 import { hash, verify } from 'argon2';
 
 import { Team } from './team.model';
-
-export const privateFields = [
-	'password',
-	'__v',
-	'verificationCode',
-	'verified',
-	'passwordResetCode',
-];
 @modelOptions({
 	schemaOptions: {
 		timestamps: true,
+		toJSON: {
+			transform: (doc: DocumentType<User>, ret) => {
+				delete ret.__v;
+				delete ret.password;
+				delete ret.passwordResetCode;
+				delete ret.verificationCode;
+				ret.id = ret._id;
+				delete ret._id;
+			},
+		},
 	},
 	options: {
 		allowMixed: Severity.ALLOW,
@@ -55,7 +57,7 @@ export class User {
 	@prop()
 	passwordResetCode: string | null;
 
-	@prop({ default: () => nanoid() })
+	@prop({ default: () => nanoid(6) })
 	verificationCode: string;
 
 	@prop({ default: false })
@@ -80,17 +82,17 @@ export class User {
 	}
 }
 
-enum Role {
+export enum Role {
 	TESTER = 'TESTER',
 	DEVELOPER = 'DEVELOPER',
 	MANAGER = 'MANAGER',
 	ADMIN = 'ADMIN',
 }
 
-class Roles {
+export class Roles {
 	@prop({ ref: () => Team })
 	teamId: Ref<Team>;
 
 	@prop({ enum: Role })
-	role: Role[];
+	role: Role;
 }

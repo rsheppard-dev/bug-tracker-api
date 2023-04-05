@@ -1,11 +1,11 @@
 import express from 'express';
 
 import teamController from '../controllers/team.controller';
-import auth from '../middleware/auth';
+import authUser from '../middleware/authUser';
 
 const router = express.Router();
 
-router.use(auth);
+router.use(authUser);
 
 router
 	.route('/')

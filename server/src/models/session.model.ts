@@ -8,9 +8,12 @@ import { User } from './user.model';
 	},
 })
 export class Session {
-	@prop({ ref: () => User })
-	user: Ref<User>;
+	@prop({ ref: () => User, required: true })
+	userId: Ref<User>;
 
 	@prop({ default: true })
 	valid: boolean;
+
+	@prop()
+	userAgent: string;
 }
