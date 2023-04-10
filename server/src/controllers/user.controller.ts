@@ -25,13 +25,17 @@ import { sendVerificationEmail } from '../services/email.services';
 // @access private
 const getAllUsers = asyncHandler(
 	async (req: Request, res: Response): Promise<any> => {
-		const users = await UserModel.find().lean();
+		const users = await UserModel.find();
 
 		if (!users?.length) {
 			return res.status(400).json({ message: 'No users found.' });
 		}
 
-		res.json(users);
+		const safeUserData = users.map(user => {
+			return user.toJSON();
+		});
+
+		res.json(safeUserData);
 	}
 );
 
@@ -44,7 +48,7 @@ const createUserHandler = asyncHandler(
 
 		sendVerificationEmail(user);
 
-		res.json(user);
+		res.json({ ...user.toJSON() });
 	}
 );
 

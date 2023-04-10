@@ -15,7 +15,7 @@ const router = express.Router();
 
 router
 	.route('/')
-	.get(authUser, userController.getAllUsers)
+	.get(userController.getAllUsers)
 	.post(validateResource(createUserSchema), userController.createUserHandler)
 	.patch(
 		authUser,

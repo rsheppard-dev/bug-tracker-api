@@ -9,13 +9,17 @@ import { UserModel } from '../models';
 // @access private
 const getAllTeams = asyncHandler(
 	async (req: Request, res: Response): Promise<any> => {
-		const teams = await TeamModel.find().lean();
+		const teams = await TeamModel.find();
 
 		if (!teams?.length) {
 			return res.status(400).json({ message: 'No teams found.' });
 		}
 
-		res.json(teams);
+		const safeTeamsData = teams.map(team => {
+			return team.toJSON();
+		});
+
+		res.json(safeTeamsData);
 	}
 );
 

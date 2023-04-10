@@ -1,5 +1,5 @@
 export default {
-	origin: 'http://localhost:3000',
+	origin: 'http://localhost:5173',
 	port: '',
 	dbUri: '',
 	accessTokenPrivateKey: '',

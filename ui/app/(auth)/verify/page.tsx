@@ -64,13 +64,15 @@ export default function VerifyPage({ searchParams }: Props) {
 					defaultValue={id}
 					id='id'
 				/>
-				<div
-					aria-live='assertive'
-					role='alert'
-					className='px-3 py-2 bg-red-300 rounded'
-				>
-					{errorMessage}
-				</div>
+				{errorMessage && (
+					<div
+						aria-live='assertive'
+						role='alert'
+						className='px-3 py-2 bg-red-300 rounded'
+					>
+						{errorMessage}
+					</div>
+				)}
 				<div className='flex flex-col gap-2'>
 					<label htmlFor='verificationCode'>Verification Code:</label>
 					<input

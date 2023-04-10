@@ -34,9 +34,7 @@ import { Team } from './team.model';
 	const user = this;
 
 	// ensure password is hashed before saving
-	if (user.isModified('password')) {
-		user.password = await hash(user.password);
-	}
+	if (user.isModified('password')) user.password = await hash(user.password);
 
 	next();
 })

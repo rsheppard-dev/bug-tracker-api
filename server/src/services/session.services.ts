@@ -5,7 +5,6 @@ import type { FilterQuery, UpdateQuery } from 'mongoose';
 import { SessionModel } from '../models';
 import { User } from '../models/user.model';
 import { signJwt } from '../utils/jwt';
-import { privateFields } from '../models/user.model';
 import { Session } from '../models/session.model';
 
 export async function createSession(userId: string, userAgent?: string) {
@@ -32,7 +31,7 @@ export function generateAccessToken(
 	sessionId: string
 ) {
 	const payload = {
-		...omit(user.toJSON(), privateFields),
+		...user.toJSON(),
 		sessionId,
 	};
 

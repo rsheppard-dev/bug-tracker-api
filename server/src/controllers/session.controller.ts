@@ -1,11 +1,9 @@
 import type { Request, Response } from 'express';
 import asyncHandler from 'express-async-handler';
 import { get } from 'lodash';
+import config from 'config';
 
-import {
-	CreateSessionInput,
-	RefreshTokenInput,
-} from '../schemas/session.schema';
+import { CreateSessionInput } from '../schemas/session.schema';
 import {
 	generateAccessToken,
 	generateRefreshToken,
@@ -34,9 +32,7 @@ const createSessionHandler = asyncHandler(
 		if (!user) return res.status(401).json({ message });
 
 		if (!user.verified)
-			return res.status(401).json({
-				message: 'You must verify your email to activate this account.',
-			});
+			return res.redirect(`http://localhost:3000/verify?id=${user.id}`);
 
 		const isMatch = await user.validatePassword(password);
 		if (!isMatch) return res.status(401).json({ message });
@@ -56,11 +52,17 @@ const createSessionHandler = asyncHandler(
 			String(session._id)
 		);
 
+		// create secure cookie
+		res.cookie('refreshToken', refreshToken, {
+			httpOnly: true,
+			secure: config.get<boolean>('secureCookie'),
+			sameSite: 'none',
+			maxAge: 365 * 24 * 60 * 60 * 1000,
+		});
+
 		res.json({
-			...user,
-			sessionId: session._id,
+			...user.toJSON(),
 			accessToken,
-			refreshToken,
 		});
 	}
 );
@@ -79,16 +81,13 @@ const getUserSessionsHandler = asyncHandler(
 );
 
 // @desc refresh access token
-// @route POST /session/refresh
+// @route GET /session/refresh
 // @access public
 const refreshTokenHandler = asyncHandler(
-	async (
-		req: Request<{}, {}, RefreshTokenInput>,
-		res: Response
-	): Promise<any> => {
+	async (req: Request, res: Response): Promise<any> => {
 		const message = 'Unauthorised.';
 
-		const { refreshToken } = req.body;
+		const { refreshToken } = req.cookies;
 
 		const { decoded, expired } = verifyJwt(
 			refreshToken,
@@ -119,6 +118,16 @@ const refreshTokenHandler = asyncHandler(
 // @access private
 const deleteSessionHandler = async (req: Request, res: Response) => {
 	const session = res.locals.user.sessionId;
+
+	const cookies = req.cookies;
+
+	if (!cookies) return res.sendStatus(204); // no content
+
+	res.clearCookie('refreshToken', {
+		httpOnly: true,
+		sameSite: 'none',
+		secure: config.get<boolean>('secureCookie'),
+	});
 
 	if (!session)
 		return res.status(404).json({ message: 'Current session not found.' });

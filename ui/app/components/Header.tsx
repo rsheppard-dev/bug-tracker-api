@@ -6,8 +6,6 @@ import { signIn, signOut, useSession } from 'next-auth/react';
 
 function Header() {
 	const { data: session } = useSession();
-
-	console.log(session);
 	return (
 		<header className='bg-purple-700 min-w-full py-3 mb-5'>
 			<div className='container'>

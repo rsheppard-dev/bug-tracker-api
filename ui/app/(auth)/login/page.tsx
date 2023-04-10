@@ -7,6 +7,7 @@ import { TypeOf, string, object } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { signIn } from 'next-auth/react';
+import axios from '@/app/utils/axios';
 
 // create validation schema
 const loginSchema = object({
@@ -36,14 +37,16 @@ function LoginPage() {
 	// function to run when form successfully submitted
 	async function onSubmit(values: LoginInput) {
 		try {
-			await signIn('credentials', {
+			const result = await axios.post('/session', values);
+			console.log(result);
+			const res = await signIn('credentials', {
 				...values,
-				redirect: true,
-				callbackUrl: '/welcome',
+				redirect: false,
 			});
-			router.push('/welcome');
+			console.log(res);
+			// router.push('/welcome');
 		} catch (e: any) {
-			console.log(e);
+			console.log('Error', e);
 			setErrorMessage(e.data.message);
 		}
 	}

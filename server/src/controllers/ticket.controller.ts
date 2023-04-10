@@ -9,13 +9,17 @@ import { TicketModel } from '../models';
 // @access private
 const getAllTickets = asyncHandler(
 	async (req: Request, res: Response): Promise<any> => {
-		const tickets = await TicketModel.find().lean();
+		const tickets = await TicketModel.find();
 
 		if (!tickets?.length) {
 			return res.status(400).json({ message: 'No tickets found.' });
 		}
 
-		res.json(tickets);
+		const safeTicketsData = tickets.map(ticket => {
+			return ticket.toJSON();
+		});
+
+		res.json(safeTicketsData);
 	}
 );
 

@@ -1,9 +1,4 @@
-import type {
-	Request,
-	Response,
-	NextFunction,
-	ErrorRequestHandler,
-} from 'express';
+import type { Request, Response, NextFunction } from 'express';
 import type { AnyZodObject } from 'zod';
 
 const validateResource =

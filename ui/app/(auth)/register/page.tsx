@@ -6,8 +6,9 @@ import { useRouter } from 'next/navigation';
 import { object, string, TypeOf } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
-import axios, { type AxiosError } from 'axios';
+import { type AxiosError } from 'axios';
 import { User } from '@/app/interfaces/user';
+import axios from '@/app/utils/axios';
 
 const createUserSchema = object({
 	firstName: string()
@@ -49,10 +50,8 @@ function RegisterPage() {
 	});
 
 	async function onSubmit(values: CreateUserInput) {
-		const SERVER = process.env.NEXT_PUBLIC_SERVER_ENDPOINT!;
-
 		try {
-			const { data } = await axios.post<User>(`${SERVER}/user`, values);
+			const { data } = await axios.post<User>('/user', values);
 			router.push(`/verify?id=${data.id}`);
 		} catch (e) {
 			const error = e as AxiosError;

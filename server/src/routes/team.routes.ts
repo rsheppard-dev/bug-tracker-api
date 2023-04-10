@@ -5,7 +5,7 @@ import authUser from '../middleware/authUser';
 
 const router = express.Router();
 
-router.use(authUser);
+// router.use(authUser);
 
 router
 	.route('/')

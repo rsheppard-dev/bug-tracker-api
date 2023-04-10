@@ -26,12 +26,9 @@ export const authOptions: NextAuthOptions = {
 
 				const user = res.data;
 
+				console.log(res);
+
 				if (user) {
-					if (!user.verified) {
-						throw new Error(
-							'You must verify your email address to activate your account.'
-						);
-					}
 					// Any object returned will be saved in `user` property of the JWT
 					return user;
 				} else {
@@ -57,4 +54,5 @@ export const authOptions: NextAuthOptions = {
 		signIn: '/login',
 	},
 	debug: process.env.NODE_ENV === 'development',
+	secret: process.env.NEXTAUTH_SECRET,
 };

@@ -18,6 +18,6 @@ router
 	.get(authUser, sessionController.getUserSessionsHandler)
 	.delete(authUser, sessionController.deleteSessionHandler);
 
-router.route('/refresh').post(sessionController.refreshTokenHandler);
+router.route('/refresh').get(sessionController.refreshTokenHandler);
 
 export default router;

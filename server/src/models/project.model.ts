@@ -1,4 +1,9 @@
-import { modelOptions, prop, Ref } from '@typegoose/typegoose';
+import {
+	modelOptions,
+	prop,
+	Ref,
+	type DocumentType,
+} from '@typegoose/typegoose';
 
 import { Team } from './team.model';
 import { User } from './user.model';
@@ -6,6 +11,13 @@ import { User } from './user.model';
 @modelOptions({
 	schemaOptions: {
 		timestamps: true,
+		toJSON: {
+			transform: (doc: DocumentType<Project>, ret) => {
+				delete ret.__v;
+				ret.id = ret._id;
+				delete ret._id;
+			},
+		},
 	},
 })
 export class Project {

@@ -9,13 +9,17 @@ import { UserModel } from '../models';
 // @access private
 const getAllProjects = asyncHandler(
 	async (req: Request, res: Response): Promise<any> => {
-		const projects = await ProjectModel.find().lean();
+		const projects = await ProjectModel.find();
 
 		if (!projects?.length) {
 			return res.status(400).json({ message: 'No projects found.' });
 		}
 
-		res.json(projects);
+		const safeProjectsData = projects.map(project => {
+			return project.toJSON();
+		});
+
+		res.json(safeProjectsData);
 	}
 );
 
@@ -24,35 +28,31 @@ const getAllProjects = asyncHandler(
 // @access private
 const createNewProject = asyncHandler(
 	async (req: Request, res: Response): Promise<any> => {
-		const { userId, name, teamId } = req.body;
-
-		// confirm valid data received
-		if (!userId || !name || !teamId) {
-			return res.status(400).json({ message: 'All fields are required.' });
-		}
+		const { owner, name, teamId } = req.body;
 
 		// check user id is valid
-		const user = await UserModel.findById(userId).exec();
+		const user = await UserModel.findById(owner).exec();
 
+		console.log(owner);
 		if (!user) {
 			return res.status(400).json({ message: 'Invalid user ID received.' });
 		}
 
-		// check team id is valid
-		const team = await TeamModel.findById(teamId).exec();
+		// // check team id is valid
+		// const team = await TeamModel.findById(teamId).exec();
 
-		if (!team) {
-			return res.status(400).json({ message: 'Invalid team ID received.' });
-		}
+		// if (!team) {
+		// 	return res.status(400).json({ message: 'Invalid team ID received.' });
+		// }
 
-		// check project name doesn't already exist on team
-		const duplicate = await ProjectModel.findOne({ name }).lean().exec();
+		// // check project name doesn't already exist on team
+		// const duplicate = await ProjectModel.findOne({ name }).lean().exec();
 
-		if (duplicate && duplicate.team.toString() === teamId) {
-			return res
-				.status(400)
-				.json({ message: 'A project with that name already exists.' });
-		}
+		// if (duplicate && duplicate.team.toString() === teamId) {
+		// 	return res
+		// 		.status(400)
+		// 		.json({ message: 'A project with that name already exists.' });
+		// }
 
 		// add project to database
 		const project = await ProjectModel.create({
