@@ -49,7 +49,7 @@ const selectUsersData = createSelector(
 
 export const {
 	selectAll: selectAllUsers,
-	selectById: selectUsersById,
+	selectById: selectUserById,
 	selectIds: selectUserIds,
 } = usersAdapter.getSelectors(
 	(state: RootState) => selectUsersData(state) ?? initialState

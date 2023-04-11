@@ -51,7 +51,7 @@ const selectProjectsData = createSelector(
 
 export const {
 	selectAll: selectAllProjects,
-	selectById: selectProjectsById,
+	selectById: selectProjectById,
 	selectIds: selectProjectIds,
 } = projectsAdapter.getSelectors(
 	(state: RootState) => selectProjectsData(state) ?? initialState

@@ -8,7 +8,10 @@ import { apiSlice } from '../../app/api/apiSlice';
 import type { RootState } from '../../app/store';
 import type { Ticket } from '../../types/ticket';
 
-const ticketsAdapter = createEntityAdapter<Ticket>({});
+const ticketsAdapter = createEntityAdapter<Ticket>({
+	sortComparer: (a, b) =>
+		a.completed === b.completed ? 0 : a.completed ? 1 : -1,
+});
 
 const initialState = ticketsAdapter.getInitialState();
 

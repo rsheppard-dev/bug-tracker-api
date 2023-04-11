@@ -1,8 +1,9 @@
 import type { Request, Response } from 'express';
 import asyncHandler from 'express-async-handler';
 
-import { ProjectModel, TeamModel } from '../models';
+import { ProjectModel } from '../models';
 import { UserModel } from '../models';
+import { isDocument } from '@typegoose/typegoose';
 
 // @desc get all projects
 // @route GET /project
@@ -15,11 +16,20 @@ const getAllProjects = asyncHandler(
 			return res.status(400).json({ message: 'No projects found.' });
 		}
 
-		const safeProjectsData = projects.map(project => {
-			return project.toJSON();
-		});
+		const projectWithNames = await Promise.all(
+			projects.map(async project => {
+				await project.populate(['manager', 'owner']);
 
-		res.json(safeProjectsData);
+				if (isDocument(project.manager) && isDocument(project.owner)) {
+					return {
+						...project.toJSON(),
+						managersName: project.manager.getFullName(),
+					};
+				} else return { ...project.toJSON() };
+			})
+		);
+
+		res.json(projectWithNames);
 	}
 );
 

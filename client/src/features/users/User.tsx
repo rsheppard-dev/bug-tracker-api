@@ -3,16 +3,16 @@ import { FaEdit } from 'react-icons/fa';
 import type { EntityId } from '@reduxjs/toolkit';
 
 import { useAppSelector } from '../../app/hooks';
-import { selectUsersById } from './usersApiSlice';
+import { selectUserById } from './usersApiSlice';
 
 type Props = {
-	userId: EntityId;
+	userId: EntityId | string;
 };
 
 function User({ userId }: Props) {
 	const navigate = useNavigate();
 
-	const user = useAppSelector(state => selectUsersById(state, userId));
+	const user = useAppSelector(state => selectUserById(state, userId));
 
 	if (user) {
 		function handleEdit() {

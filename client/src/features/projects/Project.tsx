@@ -3,30 +3,21 @@ import { useNavigate } from 'react-router-dom';
 import { FaEdit } from 'react-icons/fa';
 
 import { useAppSelector } from '../../app/hooks';
-import { selectProjectsById } from './projectsApiSlice';
-import { selectUsersById } from '../users/usersApiSlice';
+import { selectProjectById } from './projectsApiSlice';
 
 type Props = {
-	projectId: EntityId;
+	projectId: EntityId | string;
 };
 
 function Project({ projectId }: Props) {
 	const navigate = useNavigate();
 
-	const project = useAppSelector(state => selectProjectsById(state, projectId));
+	const project = useAppSelector(state => selectProjectById(state, projectId));
 
 	if (project) {
 		function handleEdit() {
 			navigate(`/dash/projects/${projectId}`);
 		}
-
-		const managerData = useAppSelector(state =>
-			selectUsersById(state, project.manager)
-		);
-
-		const manager = managerData
-			? `${managerData.firstName} ${managerData.lastName}`
-			: 'NA';
 
 		return (
 			<tr>
@@ -34,7 +25,7 @@ function Project({ projectId }: Props) {
 				<td className='border border-slate-600 truncate'>
 					{project.description}
 				</td>
-				<td className='border border-slate-600'>{manager}</td>
+				<td className='border border-slate-600'>{project.managersName}</td>
 				<td className='border border-slate-600'>
 					<button title='Edit' onClick={handleEdit}>
 						<FaEdit />
