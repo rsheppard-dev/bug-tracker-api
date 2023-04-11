@@ -1,5 +1,3 @@
-'use client';
-
 import { useId, useState } from 'react';
 
 import { TypeOf, string, object } from 'zod';

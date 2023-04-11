@@ -1,14 +1,8 @@
-'use client';
-
 import { useState, useId } from 'react';
-import { useRouter } from 'next/navigation';
 
 import { object, string, TypeOf } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
-import { type AxiosError } from 'axios';
-import { User } from '@/app/interfaces/user';
-import axios from '@/app/utils/axios';
 
 const createUserSchema = object({
 	firstName: string()
@@ -36,10 +30,9 @@ const createUserSchema = object({
 // get typescript type from schema
 type CreateUserInput = TypeOf<typeof createUserSchema>;
 
-function RegisterPage() {
+function Register() {
 	const [errorMessage, setErrorMessage] = useState<string | null>(null);
 	const id = useId();
-	const router = useRouter();
 
 	const {
 		register,
@@ -51,12 +44,9 @@ function RegisterPage() {
 
 	async function onSubmit(values: CreateUserInput) {
 		try {
-			const { data } = await axios.post<User>('/user', values);
-			router.push(`/verify?id=${data.id}`);
+			console.log(values);
 		} catch (e) {
-			const error = e as AxiosError;
-			console.log(error);
-			setErrorMessage(error.message);
+			console.log(e);
 		}
 	}
 
@@ -141,4 +131,4 @@ function RegisterPage() {
 	);
 }
 
-export default RegisterPage;
+export default Register;

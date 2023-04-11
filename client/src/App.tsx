@@ -8,6 +8,7 @@ import Welcome from './features/auth/Welcome';
 import UsersList from './features/users/UsersList';
 import ProjectsList from './features/projects/ProjectsList';
 import TicketsList from './features/tickets/TicketsList';
+import Register from './features/auth/Register';
 
 function App() {
 	return (
@@ -15,6 +16,7 @@ function App() {
 			<Route path='/' element={<RootLayout />}>
 				<Route index element={<Public />} />
 				<Route path='login' element={<Login />} />
+				<Route path='register' element={<Register />} />
 
 				<Route path='dash' element={<AuthLayout />}>
 					<Route index element={<Welcome />} />
