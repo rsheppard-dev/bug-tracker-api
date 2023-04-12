@@ -3,6 +3,9 @@ import asyncHandler from 'express-async-handler';
 
 import { UserModel } from '../models';
 import { TicketModel } from '../models';
+import { findUserById } from '../services/user.services';
+import { createTicket } from '../services/ticket.services';
+import { findProjectById } from '../services/project.services';
 
 // @desc get all tickets
 // @route GET /ticket
@@ -12,14 +15,20 @@ const getAllTickets = asyncHandler(
 		const tickets = await TicketModel.find();
 
 		if (!tickets?.length) {
-			return res.status(400).json({ message: 'No tickets found.' });
+			return res.status(404).json({ message: 'No tickets found.' });
 		}
 
-		const safeTicketsData = tickets.map(ticket => {
-			return ticket.toJSON();
-		});
+		const populatedTickets = await Promise.all(
+			tickets.map(async ticket => {
+				await ticket.populate(['owner', 'project']);
 
-		res.json(safeTicketsData);
+				return {
+					...ticket.toJSON(),
+				};
+			})
+		);
+
+		res.json(populatedTickets);
 	}
 );
 
@@ -28,37 +37,21 @@ const getAllTickets = asyncHandler(
 // @access private
 const createNewTicket = asyncHandler(
 	async (req: Request, res: Response): Promise<any> => {
-		const { userId, projectId, title, description, category, priority } =
-			req.body;
-
-		// confirm valid data received
-		if (
-			!userId ||
-			!projectId ||
-			!title ||
-			!description ||
-			!category ||
-			!priority
-		) {
-			return res.status(400).json({ message: 'All fields are required.' });
-		}
-
 		// check user id is valid
-		const user = await UserModel.findById(userId).exec();
+		const user = await findUserById(req.body.owner);
 
 		if (!user) {
 			return res.status(400).json({ message: 'Invalid user ID received.' });
 		}
 
+		const project = await findProjectById(req.body.project);
+
+		if (!project) {
+			return res.status(400).json({ message: 'Invalid project ID received.' });
+		}
+
 		// add ticket to database
-		const ticket = await TicketModel.create({
-			userId,
-			projectId,
-			title,
-			description,
-			category,
-			priority,
-		});
+		const ticket = await createTicket(req.body);
 
 		if (ticket) {
 			res

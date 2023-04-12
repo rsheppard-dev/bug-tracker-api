@@ -16,5 +16,5 @@ export class Comment {
 	owner: Ref<User>;
 
 	@prop({ ref: () => Ticket })
-	ticketId: Ref<Ticket>;
+	ticket: Ref<Ticket>;
 }

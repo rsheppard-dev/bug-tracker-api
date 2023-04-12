@@ -15,6 +15,9 @@ function Welcome() {
 					<Link to='/dash/users'>View Users</Link>
 				</li>
 				<li>
+					<Link to='/dash/teams'>View Teams</Link>
+				</li>
+				<li>
 					<Link to='/dash/projects'>View Projects</Link>
 				</li>
 				<li>

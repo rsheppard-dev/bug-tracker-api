@@ -3,6 +3,10 @@ import { useState, useId } from 'react';
 import { object, string, TypeOf } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
+import { useNavigate } from 'react-router-dom';
+
+import { useCreateNewUserMutation } from './usersApiSlice';
+import { ReduxError } from '../../../types/reduxError';
 
 const createUserSchema = object({
 	firstName: string()
@@ -30,9 +34,12 @@ const createUserSchema = object({
 // get typescript type from schema
 type CreateUserInput = TypeOf<typeof createUserSchema>;
 
-function Register() {
+function CreateUserForm() {
 	const [errorMessage, setErrorMessage] = useState<string | null>(null);
 	const id = useId();
+	const navigate = useNavigate();
+
+	const [createNewUser] = useCreateNewUserMutation();
 
 	const {
 		register,
@@ -44,7 +51,17 @@ function Register() {
 
 	async function onSubmit(values: CreateUserInput) {
 		try {
-			console.log(values);
+			setErrorMessage(null);
+
+			const result = await createNewUser(values);
+
+			// check for errors
+			if ('error' in result) {
+				const error = result.error as ReduxError;
+				setErrorMessage(error.data.message);
+			} else {
+				navigate('/dash/users');
+			}
 		} catch (e) {
 			console.log(e);
 		}
@@ -53,9 +70,15 @@ function Register() {
 	return (
 		<div className='container'>
 			<form onSubmit={handleSubmit(onSubmit)} className='space-y-2 max-w-md'>
-				<div aria-live='assertive' role='alert' className='bg-red-300 rounded'>
-					{errorMessage}
-				</div>
+				{errorMessage && (
+					<div
+						aria-live='assertive'
+						role='alert'
+						className='px-3 py-2 bg-red-300 rounded'
+					>
+						{errorMessage}
+					</div>
+				)}
 				<div className='flex flex-col gap-2'>
 					<label htmlFor='firstName'>First Name:</label>
 					<input
@@ -131,4 +154,4 @@ function Register() {
 	);
 }
 
-export default Register;
+export default CreateUserForm;

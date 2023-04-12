@@ -6,7 +6,7 @@ import {
 
 import { apiSlice } from '../../app/api/apiSlice';
 import type { RootState } from '../../app/store';
-import type { Ticket } from '../../types/ticket';
+import type { Ticket } from '../../../types/ticket';
 
 const ticketsAdapter = createEntityAdapter<Ticket>({
 	sortComparer: (a, b) =>
@@ -23,7 +23,6 @@ export const ticketsApiSlice = apiSlice.injectEndpoints({
 				validateStatus: (response, result) =>
 					response.status === 200 && !result.isError,
 			}),
-			keepUnusedDataFor: 5,
 			transformResponse: (response: Ticket[]) => {
 				return ticketsAdapter.addMany(
 					ticketsAdapter.getInitialState(),
@@ -39,10 +38,46 @@ export const ticketsApiSlice = apiSlice.injectEndpoints({
 				} else return [{ type: 'Ticket', id: 'LIST' }];
 			},
 		}),
+
+		createNewTicket: builder.mutation({
+			query: initialTicketData => ({
+				url: '/ticket',
+				method: 'POST',
+				body: {
+					...initialTicketData,
+				},
+			}),
+			invalidatesTags: [{ type: 'Ticket', id: 'LIST' }],
+		}),
+
+		updateTicket: builder.mutation({
+			query: initialTicketData => ({
+				url: '/ticket',
+				method: 'PATCH',
+				body: {
+					...initialTicketData,
+				},
+			}),
+			invalidatesTags: (result, error, arg) => [{ type: 'Ticket', id: arg.id }],
+		}),
+
+		deleteTicket: builder.mutation({
+			query: ({ id }) => ({
+				url: '/ticket',
+				method: 'DELETE',
+				body: { id },
+			}),
+			invalidatesTags: (result, error, arg) => [{ type: 'Ticket', id: arg.id }],
+		}),
 	}),
 });
 
-export const { useGetTicketsQuery } = ticketsApiSlice;
+export const {
+	useGetTicketsQuery,
+	useCreateNewTicketMutation,
+	useUpdateTicketMutation,
+	useDeleteTicketMutation,
+} = ticketsApiSlice;
 
 export const selectTicketsResult =
 	ticketsApiSlice.endpoints.getTickets.select();
@@ -54,7 +89,7 @@ const selectTicketsData = createSelector(
 
 export const {
 	selectAll: selectAllTickets,
-	selectById: selectTicketsById,
+	selectById: selectTicketById,
 	selectIds: selectTicketIds,
 } = ticketsAdapter.getSelectors(
 	(state: RootState) => selectTicketsData(state) ?? initialState

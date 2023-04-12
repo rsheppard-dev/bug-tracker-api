@@ -17,12 +17,8 @@ router
 	.route('/')
 	.get(userController.getAllUsers)
 	.post(validateResource(createUserSchema), userController.createUserHandler)
-	.patch(
-		authUser,
-		validateResource(updateUserSchema),
-		userController.updateUserHandler
-	)
-	.delete(authUser, userController.deleteUser);
+	.patch(validateResource(updateUserSchema), userController.updateUserHandler)
+	.delete(userController.deleteUserHandler);
 
 router.get(
 	'/verify/:id/:verificationCode',

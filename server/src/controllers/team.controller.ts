@@ -15,11 +15,17 @@ const getAllTeams = asyncHandler(
 			return res.status(400).json({ message: 'No teams found.' });
 		}
 
-		const safeTeamsData = teams.map(team => {
-			return team.toJSON();
-		});
+		const populatedTeams = await Promise.all(
+			teams.map(async team => {
+				await team.populate(['owner']);
 
-		res.json(safeTeamsData);
+				return {
+					...team.toJSON(),
+				};
+			})
+		);
+
+		res.json(populatedTeams);
 	}
 );
 
@@ -28,15 +34,10 @@ const getAllTeams = asyncHandler(
 // @access private
 const createNewTeam = asyncHandler(
 	async (req: Request, res: Response): Promise<any> => {
-		const { userId, name, description } = req.body;
-
-		// confirm valid data received
-		if (!userId || !name) {
-			return res.status(400).json({ message: 'All fields are required.' });
-		}
+		const { owner, name, description } = req.body;
 
 		// check user id is valid
-		const user = await UserModel.findById(userId).exec();
+		const user = await UserModel.findById(owner).exec();
 
 		if (!user) {
 			return res.status(400).json({ message: 'Invalid user ID received.' });
@@ -53,7 +54,7 @@ const createNewTeam = asyncHandler(
 
 		// add team to database
 		const team = await TeamModel.create({
-			userId,
+			owner,
 			name,
 			description,
 		});

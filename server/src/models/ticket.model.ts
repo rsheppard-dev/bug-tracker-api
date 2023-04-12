@@ -40,10 +40,10 @@ export class Ticket {
 	@prop({ required: true, trim: true })
 	description: string;
 
-	@prop({ required: true, enum: Category })
+	@prop({ default: Category.FEATURE, enum: Category })
 	category: Category;
 
-	@prop({ required: true, enum: Priority })
+	@prop({ default: Priority.LOW, enum: Priority })
 	priority: Priority;
 
 	@prop({ default: false })

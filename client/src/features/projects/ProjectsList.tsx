@@ -2,7 +2,16 @@ import Project from './Project';
 import { useGetProjectsQuery } from './projectsApiSlice';
 
 function ProjectsList() {
-	const { data: projects, isLoading, isSuccess, error } = useGetProjectsQuery();
+	const {
+		data: projects,
+		isLoading,
+		isSuccess,
+		error,
+	} = useGetProjectsQuery(undefined, {
+		pollingInterval: 15000,
+		refetchOnFocus: true,
+		refetchOnMountOrArgChange: true,
+	});
 
 	let content;
 

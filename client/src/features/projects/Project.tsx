@@ -19,13 +19,15 @@ function Project({ projectId }: Props) {
 			navigate(`/dash/projects/${projectId}`);
 		}
 
+		const manager = `${project.manager.firstName} ${project.manager.lastName}`;
+
 		return (
 			<tr>
 				<td className='border border-slate-600'>{project.name}</td>
 				<td className='border border-slate-600 truncate'>
 					{project.description}
 				</td>
-				<td className='border border-slate-600'>{project.managersName}</td>
+				<td className='border border-slate-600'>{manager}</td>
 				<td className='border border-slate-600'>
 					<button title='Edit' onClick={handleEdit}>
 						<FaEdit />

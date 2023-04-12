@@ -3,7 +3,6 @@ import asyncHandler from 'express-async-handler';
 
 import { ProjectModel } from '../models';
 import { UserModel } from '../models';
-import { isDocument } from '@typegoose/typegoose';
 
 // @desc get all projects
 // @route GET /project
@@ -20,12 +19,9 @@ const getAllProjects = asyncHandler(
 			projects.map(async project => {
 				await project.populate(['manager', 'owner']);
 
-				if (isDocument(project.manager) && isDocument(project.owner)) {
-					return {
-						...project.toJSON(),
-						managersName: project.manager.getFullName(),
-					};
-				} else return { ...project.toJSON() };
+				return {
+					...project.toJSON(),
+				};
 			})
 		);
 

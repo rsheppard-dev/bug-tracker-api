@@ -6,7 +6,7 @@ import {
 
 import { apiSlice } from '../../app/api/apiSlice';
 import type { RootState } from '../../app/store';
-import type { Project } from '../../types/project';
+import type { Project } from '../../../types/project';
 
 const projectsAdapter = createEntityAdapter<Project>({});
 
@@ -20,7 +20,6 @@ export const projectsApiSlice = apiSlice.injectEndpoints({
 				validateStatus: (response, result) =>
 					response.status === 200 && !result.isError,
 			}),
-			keepUnusedDataFor: 5,
 			transformResponse: (response: Project[]) => {
 				return projectsAdapter.addMany(
 					projectsAdapter.getInitialState(),
@@ -36,10 +35,50 @@ export const projectsApiSlice = apiSlice.injectEndpoints({
 				} else return [{ type: 'Project', id: 'LIST' }];
 			},
 		}),
+
+		createNewProject: builder.mutation({
+			query: initialProjectData => ({
+				url: '/project',
+				method: 'POST',
+				body: {
+					...initialProjectData,
+				},
+			}),
+			invalidatesTags: [{ type: 'Project', id: 'LIST' }],
+		}),
+
+		updateProject: builder.mutation({
+			query: initialProjectData => ({
+				url: '/project',
+				method: 'PATCH',
+				body: {
+					...initialProjectData,
+				},
+			}),
+			invalidatesTags: (result, error, arg) => [
+				{ type: 'Project', id: arg.id },
+			],
+		}),
+
+		deleteProject: builder.mutation({
+			query: ({ id }) => ({
+				url: '/project',
+				method: 'DELETE',
+				body: { id },
+			}),
+			invalidatesTags: (result, error, arg) => [
+				{ type: 'Project', id: arg.id },
+			],
+		}),
 	}),
 });
 
-export const { useGetProjectsQuery } = projectsApiSlice;
+export const {
+	useGetProjectsQuery,
+	useCreateNewProjectMutation,
+	useUpdateProjectMutation,
+	useDeleteProjectMutation,
+} = projectsApiSlice;
 
 export const selectProjectsResult =
 	projectsApiSlice.endpoints.getProjects.select();

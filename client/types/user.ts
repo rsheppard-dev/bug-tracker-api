@@ -1,5 +1,4 @@
 export interface User {
-	_id: string;
 	id: string;
 	email: string;
 	firstName: string;
@@ -10,7 +9,6 @@ export interface User {
 	}[];
 	createdAt: Date;
 	updatedAt: Date;
-	sessionId: string;
 }
 
 export enum Role {

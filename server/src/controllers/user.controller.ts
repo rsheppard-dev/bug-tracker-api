@@ -1,12 +1,12 @@
 import type { Request, Response } from 'express';
 import asyncHandler from 'express-async-handler';
 import { nanoid } from 'nanoid';
-import { get, updateWith } from 'lodash';
 
 import { UserModel } from '../models';
 import { TicketModel } from '../models';
 import type {
 	CreateUserInput,
+	DeleteUserInput,
 	ForgottenPasswordInput,
 	ResetPasswordInput,
 	UpdateUserInput,
@@ -31,11 +31,7 @@ const getAllUsers = asyncHandler(
 			return res.status(400).json({ message: 'No users found.' });
 		}
 
-		const safeUserData = users.map(user => {
-			return user.toJSON();
-		});
-
-		res.json(safeUserData);
+		res.json(users);
 	}
 );
 
@@ -48,7 +44,7 @@ const createUserHandler = asyncHandler(
 
 		sendVerificationEmail(user);
 
-		res.json({ ...user.toJSON() });
+		res.status(201).json(user);
 	}
 );
 
@@ -168,47 +164,20 @@ const updateUserHandler = asyncHandler(
 		req: Request<{}, {}, UpdateUserInput>,
 		res: Response
 	): Promise<any> => {
-		const { _id } = res.locals.user;
-
-		const updates = Object.keys(req.body);
-		const allowedUpdates = [
-			'firstName',
-			'lastName',
-			'email',
-			'password',
-			'roles',
-		];
-		const isValidOperation = updates.every(update =>
-			allowedUpdates.includes(update)
-		);
-
-		if (!isValidOperation) {
-			return res.status(400).json({ error: 'Invalid updates.' });
-		}
+		const { id, firstName, lastName, email, password } = req.body;
 
 		// find user in database
-		const user = await findUserById(_id);
+		const user = await findUserById(id);
 
 		if (!user) {
 			return res.status(400).json({ message: 'User not found.' });
 		}
 
-		if (get(updates, 'email')) {
-			// check for duplicate email
-			const dupicate = await findUserByEmail(String(get(updates, 'email')));
-
-			// only allow updates for original email owner
-			if (dupicate && dupicate?._id.toString() !== _id) {
-				return res.status(409).json({
-					message: 'An account is already registered with that email address.',
-				});
-			}
-		}
-
 		// update user
-		updates.forEach(update => {
-			updateWith(user, update, () => get(req.body, update));
-		});
+		if (firstName) user.firstName = firstName;
+		if (lastName) user.lastName = lastName;
+		if (email) user.email = email;
+		if (password) user.password = password;
 
 		// save updated user
 		const updatedUser = await user.save();
@@ -220,11 +189,16 @@ const updateUserHandler = asyncHandler(
 // @desc delete user
 // @route DELETE /user
 // @access private
-const deleteUser = asyncHandler(
-	async (req: Request, res: Response): Promise<any> => {
-		const { id } = res.locals.user;
+const deleteUserHandler = asyncHandler(
+	async (
+		req: Request<{}, {}, DeleteUserInput>,
+		res: Response
+	): Promise<any> => {
+		const { id } = req.body;
 
-		const user = id && (await findUserById(id));
+		const user = await findUserById(id);
+
+		if (!user) return res.status(404).json({ message: 'User not found.' });
 
 		// check if user has any open tickets assigned
 		const tickets = await TicketModel.findOne({ userId: id }).lean().exec();
@@ -250,5 +224,5 @@ export default {
 	getCurrentUserHandler,
 	getAllUsers,
 	updateUserHandler,
-	deleteUser,
+	deleteUserHandler,
 };
