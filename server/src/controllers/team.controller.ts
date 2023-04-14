@@ -1,3 +1,5 @@
+import fs from 'fs';
+
 import type { Request, Response } from 'express';
 import asyncHandler from 'express-async-handler';
 
@@ -34,7 +36,17 @@ const getAllTeams = asyncHandler(
 // @access private
 const createNewTeam = asyncHandler(
 	async (req: Request, res: Response): Promise<any> => {
-		const { owner, name, description } = req.body;
+		const { owner, name } = req.body;
+		console.log('file', req.file);
+		console.log('body', req.body);
+
+		// if file uploaded include logo
+		if (req.file) {
+			req.body.logo = {
+				data: fs.readFileSync('../../uploads/' + req.file.filename),
+				contentType: req.file.mimetype,
+			};
+		}
 
 		// check user id is valid
 		const user = await UserModel.findById(owner).exec();
@@ -54,9 +66,7 @@ const createNewTeam = asyncHandler(
 
 		// add team to database
 		const team = await TeamModel.create({
-			owner,
-			name,
-			description,
+			...req.body,
 		});
 
 		if (team) {
@@ -112,6 +122,15 @@ const updateTeam = asyncHandler(
 	}
 );
 
+// @desc upload logo
+// @route POST /team/upload
+// @access private
+const uploadHandler = asyncHandler(
+	async (req: Request, res: Response): Promise<any> => {
+		res.send();
+	}
+);
+
 // @desc delete team
 // @route DELETE /team
 // @access private
@@ -139,4 +158,10 @@ const deleteTeam = asyncHandler(
 	}
 );
 
-export default { getAllTeams, createNewTeam, updateTeam, deleteTeam };
+export default {
+	getAllTeams,
+	createNewTeam,
+	updateTeam,
+	deleteTeam,
+	uploadHandler,
+};

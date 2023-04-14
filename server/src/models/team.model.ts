@@ -3,9 +3,11 @@ import {
 	prop,
 	Ref,
 	type DocumentType,
+	Severity,
 } from '@typegoose/typegoose';
 
 import { User } from './user.model';
+import { Image } from './image.model';
 
 @modelOptions({
 	schemaOptions: {
@@ -18,6 +20,9 @@ import { User } from './user.model';
 			},
 		},
 	},
+	options: {
+		allowMixed: Severity.ALLOW,
+	},
 })
 export class Team {
 	@prop({ required: true, trim: true })
@@ -26,8 +31,8 @@ export class Team {
 	@prop({ trim: true })
 	description: string;
 
-	@prop()
-	logo: Buffer;
+	@prop({ required: true })
+	logo: Image;
 
 	@prop({ required: true, ref: () => User })
 	owner: Ref<User>;

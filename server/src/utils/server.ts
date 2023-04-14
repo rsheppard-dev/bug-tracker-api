@@ -14,6 +14,7 @@ import teamRouter from '../routes/team.routes';
 import projectRouter from '../routes/project.routes';
 import ticketRouter from '../routes/ticket.routes';
 import getUser from '../middleware/getUser';
+import exp from 'constants';
 
 function createServer() {
 	const app = express();
@@ -26,6 +27,7 @@ function createServer() {
 			credentials: true,
 		})
 	);
+	app.use(express.urlencoded({ extended: false }));
 	app.use(express.json());
 	app.use(cookieParser());
 	app.use('/', express.static(path.join(__dirname, 'public')));
