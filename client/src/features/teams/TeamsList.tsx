@@ -40,6 +40,7 @@ function TeamsList() {
 			<table className='table-fixed w-full border-collapse border border-slate-600'>
 				<thead className='bg-slate-300'>
 					<tr className='text-left'>
+						<th className='border border-slate-600'>Logo</th>
 						<th className='border border-slate-600'>Name</th>
 						<th className='border border-slate-600'>Description</th>
 						<th className='border border-slate-600'>Owner</th>

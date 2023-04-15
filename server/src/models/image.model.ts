@@ -1,9 +1,9 @@
 import { prop } from '@typegoose/typegoose';
 
 export class Image {
-	@prop({ required: true })
+	@prop()
 	contentType: string;
 
-	@prop({ required: true })
+	@prop()
 	data: Buffer;
 }

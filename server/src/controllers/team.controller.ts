@@ -5,11 +5,17 @@ import asyncHandler from 'express-async-handler';
 
 import { TeamModel } from '../models';
 import { UserModel } from '../models';
+import type {
+	CreateTeamInput,
+	DeleteTeamInput,
+	UpdateTeamInput,
+} from '../schemas/team.schema';
+import { findUserById } from '../services/user.services';
 
 // @desc get all teams
 // @route GET /team
 // @access private
-const getAllTeams = asyncHandler(
+const getAllTeamsHandler = asyncHandler(
 	async (req: Request, res: Response): Promise<any> => {
 		const teams = await TeamModel.find();
 
@@ -34,11 +40,13 @@ const getAllTeams = asyncHandler(
 // @desc create new team
 // @route POST /team
 // @access private
-const createNewTeam = asyncHandler(
-	async (req: Request, res: Response): Promise<any> => {
+const createTeamHandler = asyncHandler(
+	async (
+		req: Request<{}, {}, CreateTeamInput>,
+		res: Response
+	): Promise<any> => {
 		const { owner, name } = req.body;
-		console.log('file', req.file);
-		console.log('body', req.body);
+		console.log(req.body);
 
 		// if file uploaded include logo
 		if (req.file) {
@@ -60,7 +68,7 @@ const createNewTeam = asyncHandler(
 
 		if (duplicate) {
 			return res
-				.status(400)
+				.status(409)
 				.json({ message: 'A team with that name is already registered.' });
 		}
 
@@ -80,14 +88,12 @@ const createNewTeam = asyncHandler(
 // @desc update team
 // @route PATCH /team
 // @access private
-const updateTeam = asyncHandler(
-	async (req: Request, res: Response): Promise<any> => {
-		const { id, name, description, logo, userId } = req.body;
-
-		// confirm all data received and valid
-		if (!id || !name || !description) {
-			return res.status(400).json({ message: 'All fields are required.' });
-		}
+const updateTeamHandler = asyncHandler(
+	async (
+		req: Request<{}, {}, UpdateTeamInput>,
+		res: Response
+	): Promise<any> => {
+		const { id, name, description, owner } = req.body;
 
 		// find team in database
 		const team = await TeamModel.findById(id).exec();
@@ -96,24 +102,21 @@ const updateTeam = asyncHandler(
 			return res.status(400).json({ message: 'No team found.' });
 		}
 
-		// update ticket
-		team.name = name;
-		team.description = description;
+		const user = owner && (await findUserById(owner));
 
-		if (logo) {
-			team.logo = logo;
-		}
+		if (!user) return res.status(400).json({ message: 'No user found.' });
 
-		if (userId) {
-			const user = await UserModel.findById(userId).exec();
+		// update team
+		if (name) team.name = name;
+		if (description) team.description = description;
+		if (owner) team.owner = user._id;
 
-			if (!user) {
-				return res.status(400).json({
-					message: 'Unable to transfer team to invalid user.',
-				});
-			}
-
-			team.owner = userId;
+		// if file uploaded include logo
+		if (req.file) {
+			team.logo = {
+				data: fs.readFileSync('../../uploads/' + req.file.filename),
+				contentType: req.file.mimetype,
+			};
 		}
 
 		const updatedTeam = await team.save();
@@ -122,20 +125,14 @@ const updateTeam = asyncHandler(
 	}
 );
 
-// @desc upload logo
-// @route POST /team/upload
-// @access private
-const uploadHandler = asyncHandler(
-	async (req: Request, res: Response): Promise<any> => {
-		res.send();
-	}
-);
-
 // @desc delete team
 // @route DELETE /team
 // @access private
-const deleteTeam = asyncHandler(
-	async (req: Request, res: Response): Promise<any> => {
+const deleteTeamHandler = asyncHandler(
+	async (
+		req: Request<{}, {}, DeleteTeamInput>,
+		res: Response
+	): Promise<any> => {
 		const { id } = req.body;
 
 		// check data received
@@ -159,9 +156,8 @@ const deleteTeam = asyncHandler(
 );
 
 export default {
-	getAllTeams,
-	createNewTeam,
-	updateTeam,
-	deleteTeam,
-	uploadHandler,
+	getAllTeamsHandler,
+	createTeamHandler,
+	updateTeamHandler,
+	deleteTeamHandler,
 };

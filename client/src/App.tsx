@@ -11,8 +11,8 @@ import TicketsList from './features/tickets/TicketsList';
 import TeamsList from './features/teams/TeamsList';
 import EditUser from './features/users/EditUser';
 import EditTeam from './features/teams/EditTeam';
-import CreateUserForm from './features/users/CreateUserForm';
-import CreateTeam from './features/teams/CreateTeam';
+import NewUserForm from './features/users/NewUserForm';
+import NewTeam from './features/teams/NewTeam';
 import Prefetch from './features/auth/Prefetch';
 
 function App() {
@@ -21,7 +21,7 @@ function App() {
 			<Route path='/' element={<RootLayout />}>
 				<Route index element={<Public />} />
 				<Route path='login' element={<Login />} />
-				<Route path='register' element={<CreateUserForm />} />
+				<Route path='register' element={<NewUserForm />} />
 
 				<Route element={<Prefetch />}>
 					<Route path='dash' element={<AuthLayout />}>
@@ -34,7 +34,7 @@ function App() {
 
 						<Route path='teams'>
 							<Route index element={<TeamsList />} />
-							<Route path='new' element={<CreateTeam />} />
+							<Route path='new' element={<NewTeam />} />
 							<Route path=':id' element={<EditTeam />} />
 						</Route>
 

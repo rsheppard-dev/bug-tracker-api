@@ -18,10 +18,19 @@ function Welcome() {
 					<Link to='/dash/teams'>View Teams</Link>
 				</li>
 				<li>
+					<Link to='/dash/teams/new'>Create New Team</Link>
+				</li>
+				<li>
 					<Link to='/dash/projects'>View Projects</Link>
 				</li>
 				<li>
+					<Link to='/dash/projects/new'>Create New Project</Link>
+				</li>
+				<li>
 					<Link to='/dash/tickets'>View Tickets</Link>
+				</li>
+				<li>
+					<Link to='/dash/tickets/new'>Create New Ticket</Link>
 				</li>
 			</ul>
 		</section>

@@ -33,26 +33,26 @@ export const teamsApiSlice = apiSlice.injectEndpoints({
 			},
 		}),
 
-		createNewTeam: builder.mutation({
-			query: initialTeamData => ({
+		createNewTeam: builder.mutation<{}, FormData>({
+			query: data => ({
 				url: '/team',
 				method: 'POST',
-				body: {
-					...initialTeamData,
-				},
+				credentials: 'include',
+				body: data,
 			}),
 			invalidatesTags: [{ type: 'Team', id: 'LIST' }],
 		}),
 
-		updateTeam: builder.mutation({
-			query: initialTeamData => ({
+		updateTeam: builder.mutation<{}, FormData>({
+			query: data => ({
 				url: '/team',
 				method: 'PATCH',
-				body: {
-					...initialTeamData,
-				},
+				credentials: 'include',
+				body: data,
 			}),
-			invalidatesTags: (result, error, arg) => [{ type: 'Team', id: arg.id }],
+			invalidatesTags: (result, error, arg) => [
+				{ type: 'Team', id: arg.get('id') as string },
+			],
 		}),
 
 		deleteTeam: builder.mutation({

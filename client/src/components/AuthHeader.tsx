@@ -8,7 +8,11 @@ function AuthHeader() {
 					<Link className='font-bold' to='/dash'>
 						Bugscape
 					</Link>
-					<nav className='flex gap-3'></nav>
+					<nav className='flex gap-3'>
+						<Link to='/login'>Login</Link>
+						<span>|</span>
+						<Link to='/register'>Register</Link>
+					</nav>
 				</div>
 			</div>
 		</header>

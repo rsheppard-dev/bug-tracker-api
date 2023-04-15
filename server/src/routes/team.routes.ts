@@ -3,6 +3,12 @@ import express from 'express';
 import teamController from '../controllers/team.controller';
 import authUser from '../middleware/authUser';
 import upload from '../middleware/upload';
+import validateResource from '../middleware/validateResource';
+import {
+	createTeamSchema,
+	deleteTeamSchema,
+	updateTeamSchema,
+} from '../schemas/team.schema';
 
 const router = express.Router();
 
@@ -10,11 +16,17 @@ const router = express.Router();
 
 router
 	.route('/')
-	.get(teamController.getAllTeams)
-	.post(upload.single('logo'), teamController.createNewTeam)
-	.patch(upload.single('logo'), teamController.updateTeam)
-	.delete(teamController.deleteTeam);
-
-router.post('/upload', upload.single('logo'), teamController.uploadHandler);
+	.get(teamController.getAllTeamsHandler)
+	.post(
+		upload.single('logo'),
+		validateResource(createTeamSchema),
+		teamController.createTeamHandler
+	)
+	.patch(
+		upload.single('logo'),
+		validateResource(updateTeamSchema),
+		teamController.updateTeamHandler
+	)
+	.delete(validateResource(deleteTeamSchema), teamController.deleteTeamHandler);
 
 export default router;

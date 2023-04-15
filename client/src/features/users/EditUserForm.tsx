@@ -46,7 +46,7 @@ function EditUserForm({ user }: { user: User }) {
 	const navigate = useNavigate();
 
 	const [updateUser] = useUpdateUserMutation();
-	const [deleteUser] = useDeleteUserMutation();
+	const [deleteUser, { isLoading }] = useDeleteUserMutation();
 
 	const {
 		register,
@@ -179,7 +179,7 @@ function EditUserForm({ user }: { user: User }) {
 				<div className='flex justify-end gap-2'>
 					<button
 						type='submit'
-						disabled={isSubmitting}
+						disabled={isSubmitting || isSubmitting}
 						title='Save'
 						className='bg-amber-400 enabled:hover:bg-amber-500 disabled:opacity-50 px-2 py-1 rounded'
 					>
@@ -188,7 +188,7 @@ function EditUserForm({ user }: { user: User }) {
 					<button
 						type='button'
 						onClick={handleDelete}
-						disabled={isSubmitting}
+						disabled={isLoading || isSubmitting}
 						title='Delete'
 						className='bg-red-500 enabled:hover:bg-red-600 disabled:opacity-50 px-2 py-1 rounded'
 					>

@@ -4,6 +4,7 @@ import type { EntityId } from '@reduxjs/toolkit';
 
 import { useAppSelector } from '../../app/hooks';
 import { selectTeamById } from './teamsApiSlice';
+import createImageUrl from '../../utils/createImageUrl';
 
 type Props = {
 	teamId: EntityId | string;
@@ -21,8 +22,16 @@ function Team({ teamId }: Props) {
 
 		const owner = `${team.owner.firstName} ${team.owner.lastName}`;
 
+		const logo = createImageUrl(
+			team?.logo?.data?.data,
+			team?.logo?.contentType
+		);
+
 		return (
 			<tr>
+				<td className='border border-slate-600'>
+					{logo && <img src={logo} alt={team.name} />}
+				</td>
 				<td className='border border-slate-600'>{team.name}</td>
 				<td className='border border-slate-600 truncate'>{team.description}</td>
 				<td className='border border-slate-600'>{owner}</td>

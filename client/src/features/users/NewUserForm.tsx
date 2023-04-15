@@ -6,7 +6,7 @@ import { useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
 
 import { useCreateNewUserMutation } from './usersApiSlice';
-import { ReduxError } from '../../../types/reduxError';
+import type { ReduxError } from '../../../types/reduxError';
 
 const createUserSchema = object({
 	firstName: string()
@@ -34,7 +34,7 @@ const createUserSchema = object({
 // get typescript type from schema
 type CreateUserInput = TypeOf<typeof createUserSchema>;
 
-function CreateUserForm() {
+function NewUserForm() {
 	const [errorMessage, setErrorMessage] = useState<string | null>(null);
 	const id = useId();
 	const navigate = useNavigate();
@@ -154,4 +154,4 @@ function CreateUserForm() {
 	);
 }
 
-export default CreateUserForm;
+export default NewUserForm;

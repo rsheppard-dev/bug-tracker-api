@@ -4,7 +4,10 @@ export interface Team {
 	id: string;
 	name: string;
 	description: string;
-	logo: string;
+	logo: {
+		contentType: string;
+		data: any;
+	};
 	owner: User;
 	createdAt: Date;
 	updatedAt: Date;

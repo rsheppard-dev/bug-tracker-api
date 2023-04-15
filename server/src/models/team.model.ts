@@ -31,7 +31,7 @@ export class Team {
 	@prop({ trim: true })
 	description: string;
 
-	@prop({ required: true })
+	@prop()
 	logo: Image;
 
 	@prop({ required: true, ref: () => User })
