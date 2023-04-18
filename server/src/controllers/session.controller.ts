@@ -9,11 +9,10 @@ import {
 	generateRefreshToken,
 	createSession,
 	findSessions,
-	updateSession,
 	findSessionById,
 } from '../services/session.services';
-import { findUserByEmail, findUserById } from '../services/user.services';
 import { verifyJwt } from '../utils/jwt';
+import { SessionModel, UserModel } from '../models';
 
 // @desc create session - login
 // @route POST /session
@@ -27,24 +26,19 @@ const createSessionHandler = asyncHandler(
 
 		const message = 'Invalid email or password.';
 
-		const user = await findUserByEmail(email);
-
-		if (!user) return res.status(401).json({ message });
-
-		if (!user.verified)
-			return res.redirect(`http://localhost:3000/verify?id=${user.id}`);
+		const user = await UserModel.findOne({ email }).orFail(new Error(message));
 
 		const isMatch = await user.validatePassword(password);
 		if (!isMatch) return res.status(401).json({ message });
 
+		// if (!user.verified)
+		// 	return res.redirect(`http://localhost:3000/verify?id=${user.id}`);
+
 		// create a session
-		const session = await createSession(
-			String(user._id),
-			req.get('user-agent')
-		);
+		const session = await createSession(user.id, req.get('user-agent'));
 
 		// create an access token
-		const accessToken = generateAccessToken(user, String(session._id));
+		const accessToken = generateAccessToken(user, session.id);
 
 		// create a refresh token
 		const refreshToken = await generateRefreshToken(
@@ -100,9 +94,9 @@ const refreshTokenHandler = asyncHandler(
 
 		if (!session) return res.status(403).json({ message });
 
-		const user = await findUserById(get(decoded, 'userId')!);
-
-		if (!user) return res.status(403).json({ message });
+		const user = await UserModel.findById(get(decoded, 'userId')!).orFail(
+			new Error(message)
+		);
 
 		const accessToken =
 			user && session ? generateAccessToken(user, String(session._id)) : null;
@@ -132,8 +126,8 @@ const deleteSessionHandler = async (req: Request, res: Response) => {
 	if (!session)
 		return res.status(404).json({ message: 'Current session not found.' });
 
-	// find session by id and change valid status to false
-	await updateSession({ _id: session }, { valid: false });
+	// delete session
+	await SessionModel.deleteOne({ _id: session });
 
 	return res.json({ message: 'Successfully logged out.' });
 };

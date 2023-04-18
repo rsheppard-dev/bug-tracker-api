@@ -1,11 +1,8 @@
 import type { Request, Response } from 'express';
 import asyncHandler from 'express-async-handler';
 
-import { UserModel } from '../models';
+import { ProjectModel, UserModel } from '../models';
 import { TicketModel } from '../models';
-import { findUserById } from '../services/user.services';
-import { createTicket } from '../services/ticket.services';
-import { findProjectById } from '../services/project.services';
 
 // @desc get all tickets
 // @route GET /ticket
@@ -38,25 +35,21 @@ const getAllTickets = asyncHandler(
 const createNewTicket = asyncHandler(
 	async (req: Request, res: Response): Promise<any> => {
 		// check user id is valid
-		const user = await findUserById(req.body.owner);
+		const user = await UserModel.findById(req.body.owner).orFail(
+			new Error('Invalid user ID.')
+		);
 
-		if (!user) {
-			return res.status(400).json({ message: 'Invalid user ID received.' });
-		}
-
-		const project = await findProjectById(req.body.project);
-
-		if (!project) {
-			return res.status(400).json({ message: 'Invalid project ID received.' });
-		}
+		const project = await ProjectModel.findById(req.body.project).orFail(
+			new Error('Invalid project ID.')
+		);
 
 		// add ticket to database
-		const ticket = await createTicket(req.body);
+		const ticket = await TicketModel.create(req.body);
 
 		if (ticket) {
 			res
 				.status(201)
-				.json({ message: `New ticket with ID: ${ticket._id} created.` });
+				.json({ message: `New ticket with ID: ${ticket.id} created.` });
 		} else {
 			res.status(400).json({ message: 'Invalid ticket data received.' });
 		}
@@ -75,7 +68,6 @@ const updateTicket = asyncHandler(
 			category,
 			priority,
 			developerId,
-			projectId,
 			completed,
 		} = req.body;
 
@@ -133,7 +125,7 @@ const deleteTicket = asyncHandler(
 		const deletedTicket = await ticket.deleteOne();
 
 		res.json({
-			message: `Ticket ID: ${deletedTicket._id} deleted.`,
+			message: `Ticket ID: ${deletedTicket.id} deleted.`,
 		});
 	}
 );

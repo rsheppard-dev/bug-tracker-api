@@ -3,14 +3,12 @@ import fs from 'fs';
 import type { Request, Response } from 'express';
 import asyncHandler from 'express-async-handler';
 
-import { TeamModel } from '../models';
-import { UserModel } from '../models';
+import { TeamModel, UserModel } from '../models';
 import type {
 	CreateTeamInput,
 	DeleteTeamInput,
 	UpdateTeamInput,
 } from '../schemas/team.schema';
-import { findUserById } from '../services/user.services';
 
 // @desc get all teams
 // @route GET /team
@@ -46,7 +44,6 @@ const createTeamHandler = asyncHandler(
 		res: Response
 	): Promise<any> => {
 		const { owner, name } = req.body;
-		console.log(req.body);
 
 		// if file uploaded include logo
 		if (req.file) {
@@ -57,14 +54,12 @@ const createTeamHandler = asyncHandler(
 		}
 
 		// check user id is valid
-		const user = await UserModel.findById(owner).exec();
-
-		if (!user) {
-			return res.status(400).json({ message: 'Invalid user ID received.' });
-		}
+		const user = await UserModel.findById(owner).orFail(
+			new Error('Invalid user id.')
+		);
 
 		// check team name doesn't already exist
-		const duplicate = await TeamModel.findOne({ name }).lean().exec();
+		const duplicate = await name;
 
 		if (duplicate) {
 			return res
@@ -72,15 +67,19 @@ const createTeamHandler = asyncHandler(
 				.json({ message: 'A team with that name is already registered.' });
 		}
 
-		// add team to database
-		const team = await TeamModel.create({
-			...req.body,
-		});
+		try {
+			// add team to database
+			const team = await TeamModel.create(req.body);
 
-		if (team) {
 			res.status(201).json({ message: `${team.name} created.` });
-		} else {
-			res.status(400).json({ message: 'Invalid team data received.' });
+		} catch (error: any) {
+			// typegoose error checks
+			if (error.code === 11000) {
+				console.log(error);
+				return res
+					.status(409)
+					.json({ message: 'A team with that name already exists.' });
+			}
 		}
 	}
 );
@@ -96,20 +95,31 @@ const updateTeamHandler = asyncHandler(
 		const { id, name, description, owner } = req.body;
 
 		// find team in database
-		const team = await TeamModel.findById(id).exec();
+		const team = await TeamModel.findById(id);
 
 		if (!team) {
 			return res.status(400).json({ message: 'No team found.' });
 		}
 
-		const user = owner && (await findUserById(owner));
+		if (name) {
+			// check team name doesn't already exist
+			const duplicate = await TeamModel.findOne({ name });
 
-		if (!user) return res.status(400).json({ message: 'No user found.' });
+			if (duplicate && duplicate.name !== team.name) {
+				return res
+					.status(409)
+					.json({ message: 'A team with that name is already registered.' });
+			}
+		}
+
+		const user = await UserModel.findById(owner).orFail(
+			new Error('No user found.')
+		);
 
 		// update team
 		if (name) team.name = name;
 		if (description) team.description = description;
-		if (owner) team.owner = user._id;
+		if (owner) team.owner = user.id;
 
 		// if file uploaded include logo
 		if (req.file) {
@@ -141,11 +151,9 @@ const deleteTeamHandler = asyncHandler(
 		}
 
 		// check team exists
-		const team = await TeamModel.findById(id).exec();
-
-		if (!team) {
-			return res.status(400).json({ message: 'Team not found.' });
-		}
+		const team = await TeamModel.findById(id).orFail(
+			new Error('No team found.')
+		);
 
 		const deletedTeam = await team.deleteOne();
 

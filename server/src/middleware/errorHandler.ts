@@ -15,13 +15,6 @@ function errorHandler(
 
 	console.log(error.stack);
 
-	// typegoose error checks
-	if (error.code === 11000) {
-		return res
-			.status(409)
-			.json({ message: 'Account already exists with that email address.' });
-	}
-
 	// set error status
 	const status = res.statusCode ? res.statusCode : 500;
 	res.status(status);

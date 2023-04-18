@@ -12,11 +12,6 @@ import type {
 	UpdateUserInput,
 	VerifyUserInput,
 } from '../schemas/user.schema';
-import {
-	createUser,
-	findUserByEmail,
-	findUserById,
-} from '../services/user.services';
 import sendMail from '../utils/mail';
 import { sendVerificationEmail } from '../services/email.services';
 
@@ -39,8 +34,22 @@ const getAllUsers = asyncHandler(
 // @route POST /user
 // @access public
 const createUserHandler = asyncHandler(
-	async (req: Request<{}, {}, CreateUserInput>, res: Response) => {
-		const user = await createUser(req.body);
+	async (
+		req: Request<{}, {}, CreateUserInput>,
+		res: Response
+	): Promise<any> => {
+		const { email } = req.body;
+
+		// check email doesn't already exist
+		const duplicate = await UserModel.findOne({ email }).lean();
+
+		if (duplicate) {
+			return res
+				.status(409)
+				.json({ message: 'A user with that email is already registered.' });
+		}
+
+		const user = await UserModel.create(req.body);
 
 		sendVerificationEmail(user);
 
@@ -56,7 +65,7 @@ const verifyUserHandler = asyncHandler(
 		const { id, verificationCode } = req.params;
 
 		// find user by id
-		const user = await findUserById(id);
+		const user = await UserModel.findById(id);
 
 		if (!user) return res.sendStatus(404);
 
@@ -89,7 +98,7 @@ const forgottenPasswordHandler = asyncHandler(
 		const message =
 			'If an account with that email exists, you will received a password reset link.';
 
-		const user = await findUserByEmail(email);
+		const user = await UserModel.findOne({ email });
 
 		if (!user) return res.json({ message });
 
@@ -124,7 +133,7 @@ const resetPasswordHandler = asyncHandler(
 		const { id, passwordResetCode } = req.params;
 		const { password } = req.body;
 
-		const user = await findUserById(id);
+		const user = await UserModel.findById(id);
 
 		if (
 			!user ||
@@ -167,10 +176,19 @@ const updateUserHandler = asyncHandler(
 		const { id, firstName, lastName, email, password } = req.body;
 
 		// find user in database
-		const user = await findUserById(id);
+		const user = await UserModel.findById(id).orFail(
+			new Error('User not found.')
+		);
 
-		if (!user) {
-			return res.status(400).json({ message: 'User not found.' });
+		if (email) {
+			// check email doesn't already exist
+			const duplicate = await UserModel.findOne({ email }).lean();
+
+			if (duplicate && duplicate.email !== user.email) {
+				return res
+					.status(409)
+					.json({ message: 'A user with that email is already registered.' });
+			}
 		}
 
 		// update user
@@ -196,12 +214,12 @@ const deleteUserHandler = asyncHandler(
 	): Promise<any> => {
 		const { id } = req.body;
 
-		const user = await findUserById(id);
-
-		if (!user) return res.status(404).json({ message: 'User not found.' });
+		const user = await UserModel.findById(id).orFail(
+			new Error('User not found.')
+		);
 
 		// check if user has any open tickets assigned
-		const tickets = await TicketModel.findOne({ userId: id }).lean().exec();
+		const tickets = await TicketModel.findOne({ userId: id }).lean();
 
 		if (tickets) {
 			return res.status(400).json({ message: 'User has assigned tickets.' });

@@ -3,7 +3,7 @@ import {
 	prop,
 	Ref,
 	type DocumentType,
-	Severity,
+	index,
 } from '@typegoose/typegoose';
 
 import { User } from './user.model';
@@ -20,12 +20,10 @@ import { Image } from './image.model';
 			},
 		},
 	},
-	options: {
-		allowMixed: Severity.ALLOW,
-	},
 })
+@index({ name: 1 })
 export class Team {
-	@prop({ required: true, trim: true })
+	@prop({ required: true, trim: true, unique: true })
 	name: string;
 
 	@prop({ trim: true })

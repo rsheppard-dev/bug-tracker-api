@@ -1,5 +1,4 @@
 import { type DocumentType } from '@typegoose/typegoose';
-import { omit } from 'lodash';
 import type { FilterQuery, UpdateQuery } from 'mongoose';
 
 import { SessionModel } from '../models';

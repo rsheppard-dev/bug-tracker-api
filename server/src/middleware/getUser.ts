@@ -1,9 +1,9 @@
 import type { NextFunction, Response, Request } from 'express';
+import { get } from 'lodash';
 
 import { verifyJwt } from '../utils/jwt';
 import { User } from '../models/user.model';
-import { findUserById } from '../services/user.services';
-import { get, omit } from 'lodash';
+import { UserModel } from '../models';
 
 async function getUser(req: Request, res: Response, next: NextFunction) {
 	const authHeader = (req.headers.authorization ||
@@ -21,7 +21,7 @@ async function getUser(req: Request, res: Response, next: NextFunction) {
 		return next();
 	}
 
-	const user = await findUserById(String(get(decoded, 'id')));
+	const user = await UserModel.findById(get(decoded, 'id'));
 
 	if (!user) return next();
 
